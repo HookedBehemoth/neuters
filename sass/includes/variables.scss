@@ -1,0 +1,34 @@
+// colors
+$bg_color: #0F0F0F;
+$bg_panel: #161616;
+$fg_color: #F8F8F2;
+$fg_faded: #F8F8F2CF;
+$accent: #FF6C60;
+
+@media (prefers-color-scheme : dark) {
+    body {
+        --bg_color: #0F0F0F;
+        --bg_panel: #161616;
+        --fg_color: #F8F8F2;
+        --fg_faded: #F8F8F2CF;
+        --accent: #FF6C60;
+    }
+}
+
+@media (prefers-color-scheme : light) {
+    body {
+        --bg_color: #FFFFFF;
+        --bg_panel: #FFFFFF;
+        --fg_color: #040404;
+        --fg_faded: #888888;
+        --accent: #1DA1F2;
+    }
+}
+
+$page-width: 900px;
+
+//fonts
+$font_0: Helvetica Neue;
+$font_1: Helvetica;
+$font_2: Arial;
+$font_3: sans-serif;

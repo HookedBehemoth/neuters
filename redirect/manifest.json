@@ -1,0 +1,31 @@
+{
+    "name": "Reuters Redirect",
+    "description": "Redirects Reuters articles to a more privacy and lightweight oriented frontend.",
+    "manifest_version": 2,
+    "version": "1.0",
+    "background": {
+        "scripts": [
+            "redirect.js"
+        ],
+        "persistent": true
+    },
+    "icons": {},
+    "content_scripts": [
+        {
+            "matches": [
+                "*://reuters.com/*",
+                "*://www.reuters.com/*"
+            ],
+            "js": [
+                "redirect.js"
+            ],
+            "run_at": "document_start"
+        }
+    ],
+    "permissions": [
+        "webRequest",
+        "webRequestBlocking",
+        "*://reuters.com/*",
+        "*://www.reuters.com/*"
+    ]
+}

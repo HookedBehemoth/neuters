@@ -1,0 +1,63 @@
+@import "variables";
+
+body {
+  background-color: var(--bg_color);
+  color: var(--fg_color);
+  font-family: $font_0, $font_1, $font_2, $font_3;
+  font-size: 18px;
+  margin: 0;
+}
+
+* {
+  outline: unset;
+  text-decoration: none;
+}
+
+h1 {
+  display: inline;
+}
+
+h2,
+h3 {
+  font-weight: normal;
+}
+
+a {
+  color: var(--accent);
+
+  &:hover,
+  &:focus {
+    text-decoration: underline;
+  }
+}
+
+.byline {
+  color: var(--fg_faded);
+  font-size: 14px;
+  margin: 0 0 6px;
+}
+
+main {
+  background-color: var(--bg_panel);
+  padding: 20px;
+  line-height: 1.4;
+  max-width: $page-width;
+  margin: 1em auto;
+  border-radius: 20px;
+  box-shadow: 0 0 1em rgba(0, 0, 0, 0.2);
+}
+
+img {
+  max-width: 100%;
+}
+
+footer {
+  max-width: $page-width;
+  margin: 1em auto;
+  font-size: 14px;
+  text-align: center;
+  color: var(--fg_faded);
+  a {
+    color: var(--fg_faded);
+  }
+}

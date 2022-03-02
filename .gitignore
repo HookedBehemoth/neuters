@@ -1,0 +1,4 @@
+/target
+*.zip
+*.lock
+*.xpi

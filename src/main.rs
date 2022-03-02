@@ -73,7 +73,6 @@ enum Body {
     Data(&'static str, Vec<u8>),
 }
 
-#[cached(time = 86400)]
 fn render_page(path: String) -> Response {
     println!("Cache Miss!");
 
@@ -82,14 +81,14 @@ fn render_page(path: String) -> Response {
             code: 404,
             body: Body::Data("image/x-icon", vec![]),
         },
-        "/" | "/home" => render_section("/home", 8),
+        "/" | "/home" => render_section(path, 8),
         "/about" => render_about(),
         "/contact" => render_contact(),
-        path => {
+        _ => {
             if path.starts_with("/authors/") {
                 render_topic(path, 0, 20)
             } else if path.starts_with("/article/") {
-                render_error(400, "Please disable forwards to this page.", path)
+                render_error(400, "Please disable forwards to this page.", &path)
             } else {
                 render_article(path)
             }
@@ -97,13 +96,14 @@ fn render_page(path: String) -> Response {
     }
 }
 
-fn render_article(path: &str) -> Response {
+#[cached(time = 86400)]
+fn render_article(path: String) -> Response {
     let start = Instant::now();
 
-    let article = match fetch_article(path) {
+    let article = match fetch_article(&path) {
         Ok(article) => article,
         Err(err) => {
-            return render_api_error(&err, path);
+            return render_api_error(&err, &path);
         }
     };
 
@@ -169,12 +169,14 @@ fn render_article(path: &str) -> Response {
     }
 }
 
-fn render_topic(path: &str, offset: u32, size: u32) -> Response {
-    render_articles(path, fetch_articles_by_topic(path, offset, size))
+#[cached(time = 3600)]
+fn render_topic(path: String, offset: u32, size: u32) -> Response {
+    render_articles(&path, fetch_articles_by_topic(&path, offset, size))
 }
 
-fn render_section(path: &str, size: u32) -> Response {
-    render_articles(path, fetch_articles_by_section(path, size))
+#[cached(time = 3600)]
+fn render_section(path: String, size: u32) -> Response {
+    render_articles(&path, fetch_articles_by_section(&path, size))
 }
 
 fn render_articles(path: &str, response: Result<Articles, ApiError>) -> Response {

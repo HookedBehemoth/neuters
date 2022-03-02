@@ -219,6 +219,7 @@ fn render_about() -> Response {
                     <li>"No tracking"</li>
                     <li>"No cookies"</li>
                     <li>"Lightweight (usually <10KiB vs 50MiB from Reuters)"</li>
+                    <li>"Dynamic Theming (respects system theme)"</li>
                 </ul>
                 <p>
                     "This is a work in progress. Please report any bugs or suggestions at " <a href="https://github.com/HookedBehemoth/supreme-waffle">"GitHub"</a> "."

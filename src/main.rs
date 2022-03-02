@@ -1,7 +1,5 @@
 mod api;
 
-use std::time::Instant;
-
 use api::{
     common::Articles, error::ApiError, section::fetch_articles_by_section,
     topic::fetch_articles_by_topic,
@@ -41,11 +39,7 @@ macro_rules! document {
 }
 
 fn main() {
-    println!("Hello, world!");
-
     rouille::start_server("0.0.0.0:13369", move |request| {
-        println!("{}", request.url());
-
         let response = render_page(request.url());
 
         match response.body {
@@ -72,8 +66,6 @@ enum Body {
 }
 
 fn render_page(path: String) -> Response {
-    println!("Cache Miss!");
-
     match path.as_str() {
         "/favicon.ico" => Response {
             code: 404,
@@ -96,8 +88,6 @@ fn render_page(path: String) -> Response {
 
 #[cached(time = 86400)]
 fn render_article(path: String) -> Response {
-    let start = Instant::now();
-
     let article = match fetch_article(&path) {
         Ok(article) => article,
         Err(err) => {
@@ -109,8 +99,6 @@ fn render_article(path: String) -> Response {
         .published_time
         .parse::<DateTime<Utc>>()
         .unwrap_or_else(|_| Utc::now());
-
-    let parsed = Instant::now();
 
     let doc: DOMTree<String> = document!(
         &article.title,
@@ -155,11 +143,6 @@ fn render_article(path: String) -> Response {
     );
 
     let doc_string = doc.to_string();
-
-    let rendered = Instant::now();
-
-    println!("parsed:   {:?}", parsed - start);
-    println!("rendered: {:?}", rendered - parsed);
 
     Response {
         code: 200,

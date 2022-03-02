@@ -6,7 +6,7 @@ use api::{
     common::Articles, error::ApiError, section::fetch_articles_by_section,
     topic::fetch_articles_by_topic,
 };
-use cached::proc_macro::cached;
+use cached::proc_macro::{cached, once};
 use chrono::{DateTime, Utc};
 use typed_html::{dom::DOMTree, html, text, unsafe_text};
 
@@ -220,6 +220,7 @@ fn render_articles(path: &str, response: Result<Articles, ApiError>) -> Response
     }
 }
 
+#[once]
 fn render_about() -> Response {
     let doc: DOMTree<String> = document!(
         "About",

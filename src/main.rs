@@ -117,20 +117,69 @@ fn render_article(path: String) -> Response {
                         match content["type"].as_str() {
                             Some("paragraph") => {
                                 let content = content["content"].as_str().unwrap_or_default();
-                                html!(<p>{ unsafe_text!(content) }</p>)
+                                html!(
+                                    <div>
+                                        <p>{ unsafe_text!(content) }</p>
+                                    </div>
+                                )
                             },
                             Some("image") => {
                                 let image = content["url"].as_str().unwrap_or_default();
                                 html!(
-                                    <p>
+                                    <div>
                                         <img src=image />
-                                    </p>
+                                    </div>
                                 )
                             },
+                            Some("table") => {
+                                let empty_row = vec![];
+                                let rows = content["rows"].as_array().unwrap_or(&empty_row);
+                                let mut iter = rows.iter();
+
+                                html!(
+                                    <div>
+                                        <table>
+                                            <thead>
+                                            {
+                                                let empty_value = serde_json::Value::Null;
+                                                let empty_row = vec![];
+                                                let row = iter.next().unwrap_or(&empty_value).as_array().unwrap_or(&empty_row);
+                                                html!(
+                                                    <tr>
+                                                    {
+                                                        row.iter().map(|cell| {
+                                                            let cell = cell.as_str().unwrap_or_default();
+                                                            html!(<td> { text!(cell) } </td>)
+                                                        })
+                                                    }
+                                                    </tr>
+                                                )
+                                            }
+                                            </thead>
+                                            <tbody>
+                                            {
+                                                iter.map(|row| {
+                                                    let empty_cell = vec![];
+                                                    let cells = row.as_array().unwrap_or(&empty_cell);
+                                                    html!(<tr>
+                                                    {
+                                                        cells.iter().map(|cell| {
+                                                            let cell = cell.as_str().unwrap_or_default();
+                                                            html!(<td> { text!(cell) } </td>)
+                                                        })
+                                                    }
+                                                    </tr>)
+                                                })
+                                            }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )
+                            }
                             Some(unk) => {
-                                html!(<p>{ text!("Unknown content type: {}", unk) }</p>)
+                                html!(<div>{ text!("Unknown content type: {}", unk) }</div>)
                             },
-                            _ => html!(<p>"Failed to parse!"</p>),
+                            _ => html!(<div>"Failed to parse!"</div>),
                         }
                     })
                 }
@@ -182,15 +231,15 @@ fn render_articles(path: &str, response: Result<Articles, ApiError>) -> Response
             <main>
                 <h1>{ text!(title) }</h1>
                 <ul>
-                    {
-                        articles.articles.iter().map(|article| {
-                            html!(
-                                <li>
-                                    <a href=&article.canonical_url>{ text!(&article.title) }</a>
-                                </li>
-                            )
-                        })
-                    }
+                {
+                    articles.articles.iter().map(|article| {
+                        html!(
+                            <li>
+                                <a href=&article.canonical_url>{ text!(&article.title) }</a>
+                            </li>
+                        )
+                    })
+                }
                 </ul>
             </main>
         ),

@@ -8,7 +8,7 @@ This is an alternative frontent to [Reuters](https://reuters.com/). It is intent
 * Lightweight (usually <10KiB vs 50MiB from Reuters)
 * Dynamic Theming (respects system theme)
 
-This is a work in progress. Please report any bugs or suggestions [above](/issues).
+This is a work in progress. Please report any bugs or suggestions [above](https://github.com/HookedBehemoth/supreme-waffle/issues).
 
 ## Contact
 If you have any questions, feel free to contact me at [admin@boxcat.site](mailto:admin@boxcat.site).

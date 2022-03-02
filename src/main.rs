@@ -79,7 +79,7 @@ fn render_page(path: String) -> Response {
             code: 404,
             body: Body::Data("image/x-icon", vec![]),
         },
-        "/" | "/home" => render_section(path, 8),
+        "/" | "/home" => render_section("/home".to_string(), 8),
         "/about" => render_about(),
         _ => {
             if path.starts_with("/authors/") {

@@ -13,7 +13,6 @@ use typed_html::{dom::DOMTree, html, text, unsafe_text};
 use crate::api::{article::fetch_article, byline};
 
 const CSS: &str = include_str!(concat!(env!("OUT_DIR"), "/main.css"));
-const CACHE_TIME: u64 = 24 * 60 * 60;
 
 macro_rules! document {
     ($title:expr, $content:expr, $( $head:expr ),*) => {
@@ -54,7 +53,7 @@ fn main() {
             Body::Data(content_type, data) => rouille::Response::from_data(content_type, data),
         }
         .with_status_code(response.code)
-        .with_public_cache(CACHE_TIME)
+        .with_public_cache(response.cache_time)
     });
 }
 
@@ -63,6 +62,7 @@ fn main() {
 struct Response {
     code: u16,
     body: Body,
+    cache_time: u64,
 }
 
 #[derive(Clone)]
@@ -78,6 +78,7 @@ fn render_page(path: String) -> Response {
         "/favicon.ico" => Response {
             code: 404,
             body: Body::Data("image/x-icon", vec![]),
+            cache_time: 0,
         },
         "/" | "/home" => render_section("/home".to_string(), 8),
         "/about" => render_about(),
@@ -163,6 +164,7 @@ fn render_article(path: String) -> Response {
     Response {
         code: 200,
         body: Body::Html(doc_string),
+        cache_time: 24 * 60 * 60,
     }
 }
 
@@ -214,6 +216,7 @@ fn render_articles(path: &str, response: Result<Articles, ApiError>) -> Response
     Response {
         code: 200,
         body: Body::Html(doc.to_string()),
+        cache_time: 60 * 60,
     }
 }
 
@@ -256,6 +259,7 @@ fn render_about() -> Response {
     Response {
         code: 200,
         body: Body::Html(doc.to_string()),
+        cache_time: 24 * 60 * 60,
     }
 }
 
@@ -277,6 +281,7 @@ fn render_error(code: u16, message: &str, path: &str) -> Response {
     Response {
         code,
         body: Body::Html(doc.to_string()),
+        cache_time: 0,
     }
 }
 

@@ -33,8 +33,6 @@ macro_rules! document {
                             <a href="/">"Home"</a>
                             " - "
                             <a href="/about">"About"</a>
-                            " - "
-                            <a href="/contact">"Contact"</a>
                         </div>
                     </footer>
                 </body>
@@ -83,7 +81,6 @@ fn render_page(path: String) -> Response {
         },
         "/" | "/home" => render_section(path, 8),
         "/about" => render_about(),
-        "/contact" => render_contact(),
         _ => {
             if path.starts_with("/authors/") {
                 render_topic(path, 0, 20)
@@ -221,11 +218,45 @@ fn render_articles(path: &str, response: Result<Articles, ApiError>) -> Response
 }
 
 fn render_about() -> Response {
-    render_error(404, "Page not found", "/about")
-}
+    let doc: DOMTree<String> = document!(
+        "About",
+        html!(
+            <main>
+                <h1>"About"</h1>
+                <p>
+                    "This is an alternative frontent to " <a href="https://www.reuters.com/">"Reuters"</a> ". "
+                    "It is intented to be lightweight and fast and was heavily inspired by " <a href="https://nitter.net/">"Nitter"</a> "."
+                </p>
+                <ul>
+                    <li>"No JavaScript or ads"</li>
+                    <li>"No tracking"</li>
+                    <li>"No cookies"</li>
+                    <li>"Lightweight (usually <10KiB vs 50MiB from Reuters)"</li>
+                </ul>
+                <p>
+                    "This is a work in progress. Please report any bugs or suggestions at " <a href="https://github.com/HookedBehemoth/supreme-waffle">"GitHub"</a> "."
+                </p>
+                <h2>"Contact"</h2>
+                <p>
+                    "If you have any questions, feel free to contact me at " <a href="mailto:admin@boxcat.site">"admin@boxcat.site"</a>"."
+                </p>
+                <h2>"Credits"</h2>
+                <ul>
+                    <li><a href="https://github.com/bodil/typed-html">"typed-html"</a>", a fast and intuitive inline html macro"</li>
+                    <li><a href="https://github.com/jaemk/cached">"cached"</a>", a macro for caching responses"</li>
+                </ul>
+                <h2>"License"</h2>
+                <p>
+                    "This project is licensed under the " <a href="https://www.gnu.org/licenses/licenses.html#AGPL">"GNU Affero General Public License"</a>"."
+                </p>
+            </main>
+        ),
+    );
 
-fn render_contact() -> Response {
-    render_error(404, "Page not found", "/contact")
+    Response {
+        code: 200,
+        body: Body::Html(doc.to_string()),
+    }
 }
 
 fn render_error(code: u16, message: &str, path: &str) -> Response {

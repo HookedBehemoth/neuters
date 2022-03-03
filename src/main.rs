@@ -322,6 +322,6 @@ fn render_error(code: u16, message: &str, path: &str) -> Response {
 fn render_api_error(err: &ApiError, path: &str) -> Response {
     match &err {
         ApiError::External(code, message) => render_error(*code, message, path),
-        ApiError::InternalServerError(message) => render_error(500, message, path),
+        ApiError::Internal(message) => render_error(500, message, path),
     }
 }

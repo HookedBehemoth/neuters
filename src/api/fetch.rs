@@ -12,7 +12,7 @@ where
 
     let response = match client.get(url).query(&query).send() {
         Ok(response) => {
-            if response.status() != 200 {
+            if !response.status().is_success() {
                 return Err(ApiError::External(
                     response.status().as_u16(),
                     response.text().unwrap(),
@@ -21,18 +21,20 @@ where
             response
         }
         Err(err) => {
-            return Err(ApiError::InternalServerError(err.to_string()));
+            return Err(ApiError::Internal(err.to_string()));
         }
     };
 
     match response.json::<ApiResponse<T>>() {
         Ok(response) => {
-            if response.status_code != 200 || response.result.is_none() {
+            if !(300 > response.status_code && response.status_code >= 200)
+                || response.result.is_none()
+            {
                 Err(ApiError::External(response.status_code, response.message))
             } else {
                 Ok(response.result.unwrap())
             }
         }
-        Err(err) => Err(ApiError::InternalServerError(err.to_string())),
+        Err(err) => Err(ApiError::Internal(err.to_string())),
     }
 }

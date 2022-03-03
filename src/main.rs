@@ -218,18 +218,10 @@ fn render_articles(path: &str, response: Result<Articles, ApiError>) -> Response
         }
     };
 
-    // let title = articles
-    //     .topics
-    //     .first()
-    //     .map(|topic| topic.name.as_str())
-    //     .unwrap_or_default();
-    let title = "Placeholder";
-
     let doc: DOMTree<String> = document!(
-        title,
+        "Reuters Proxy",
         html!(
             <main>
-                <h1>{ text!(title) }</h1>
                 <ul>
                 {
                     articles.articles.iter().map(|article| {

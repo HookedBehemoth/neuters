@@ -2,6 +2,8 @@
 
 This is an alternative frontent to [Reuters](https://reuters.com/). It is intented to be lightweight and fast and was heavily inspired by [Nitter](https://nitter.net/).
 
+A sample is hosted on [boxcat.site](https://boxcat.site/)
+
 * No JavaScript or ads
 * No tracking
 * No cookies

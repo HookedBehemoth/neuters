@@ -1,21 +1,48 @@
 use crate::api::{common::ApiResponse, error::ApiError};
-use reqwest::blocking::Client;
+use lazy_static::lazy_static;
+use rustls::Certificate;
 use serde::Deserialize;
+use std::sync::Arc;
+use ureq::{Agent, AgentBuilder};
+
+lazy_static! {
+    static ref AGENT: Agent = {
+        let certs = rustls_native_certs::load_native_certs().expect("Could not load certs!");
+
+        let mut root_store = rustls::RootCertStore::empty();
+        for cert in certs {
+            root_store
+                .add(&Certificate(cert.0))
+                .expect("Could not add cert!");
+        }
+        let tls_config = Arc::new(
+            rustls::ClientConfig::builder()
+                .with_safe_defaults()
+                .with_root_certificates(root_store)
+                .with_no_client_auth(),
+        );
+
+        AgentBuilder::new()
+            .tls_config(tls_config)
+            .redirects(0)
+            .build()
+    };
+}
 
 pub(crate) fn fetch<T>(url: &str, query: &str) -> Result<T, ApiError>
 where
     T: for<'a> Deserialize<'a>,
 {
-    let query = [("query", query), ("d", "75"), ("_website", "reuters")];
+    fn is_success(status: u16) -> bool {
+        (200..300).contains(&status)
+    }
 
-    let client = Client::new();
-
-    let response = match client.get(url).query(&query).send() {
+    let response = match AGENT.get(url).query("query", query).call() {
         Ok(response) => {
-            if !response.status().is_success() {
+            if !is_success(response.status()) {
                 return Err(ApiError::External(
-                    response.status().as_u16(),
-                    response.text().unwrap(),
+                    response.status(),
+                    response.into_string().unwrap(),
                 ));
             }
             response
@@ -25,11 +52,9 @@ where
         }
     };
 
-    match response.json::<ApiResponse<T>>() {
+    match response.into_json::<ApiResponse<T>>() {
         Ok(response) => {
-            if !(300 > response.status_code && response.status_code >= 200)
-                || response.result.is_none()
-            {
+            if !is_success(response.status_code) || response.result.is_none() {
                 Err(ApiError::External(response.status_code, response.message))
             } else {
                 Ok(response.result.unwrap())

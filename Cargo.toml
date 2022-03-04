@@ -3,24 +3,26 @@ name = "reuters"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 rouille = { version = "3.5", default-features = false }
-reqwest = { version = "0.11", default-features = false, features = ["rustls-tls", "blocking", "json"] }
 serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0", default-features = false }
-typed-html = { git = "https://github.com/bodil/typed-html.git" }
-cached = { version = "0.32", features = ["proc_macro"] }
-chrono = "0.4.19"
+serde_json = "1.0"
+maud = "0.23"
+cached = { version = "0.32", default-features = false, features = ["proc_macro"] }
+chrono = { version = "0.4.19", default-features = false, features = ["clock"] }
+ureq = { version = "2.4", features = ["json", "tls", "rustls"] }
+rustls = { version = "0.20", default-features = false }
+rustls-native-certs = "0.6"
+lazy_static = "1.4"
 
 [build-dependencies]
 grass = "0.10.8"
 glob = "0.3.0"
 
 [profile.release]
-strip = "debuginfo"
+strip = true
 opt-level = 3
 lto = "fat"
 panic = "abort"
 debug = false
+codegen-units = 1

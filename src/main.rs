@@ -208,7 +208,7 @@ fn render_about() -> Response {
                 li { "Dynamic Theming (respects system theme)" }
             }
             p { "You can install " a href="https://addons.mozilla.org/en-US/firefox/addon/reuters-redirect/" { "this browser extension" } " to automatically forwards all reuters links to this site." }
-            p { "This is a work in progress. Please report any bugs or suggestions at GitHub." }
+            p { "This is a work in progress. Please report any bugs or suggestions at " a href="https://github.com/HookedBehemoth/supreme-waffle" { "GitHub" } "." }
 
             h2 { "Contact" }
             p { "If you have any questions, feel free to contact me at " a href = "mailto:admin@boxcat.site" { "admin@boxcat.site" } "." }

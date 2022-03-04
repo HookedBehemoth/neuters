@@ -102,24 +102,23 @@ fn render_article(path: String) -> Response {
                 @let byline = byline::render_byline(&article.authors);
                 (time) " - " (PreEscaped(byline))
             }
-            @for content in article.content_elements.unwrap() {
+            @for content in article.content_elements.unwrap_or_default() {
                 @match content["type"].as_str() {
                     Some("paragraph") => {
-                        @let content = content["content"].as_str().unwrap_or_default();
-                        p { (PreEscaped(&content)) }
+                        @if let Some(content) = content["content"].as_str() {
+                            p { (PreEscaped(&content)) }
+                        }
                     }
                     Some("image") => {
-                        @let image = content["url"].as_str().unwrap_or_default();
-                        img src=(image);
+                        @if let Some(image) = content["url"].as_str() {
+                            img src=(image);
+                        }
                     }
                     Some("table") => {
-                        @let empty_value = serde_json::Value::Null;
-                        @let empty_vec = vec![];
-                        @let rows = content["rows"].as_array().unwrap_or(&empty_vec);
-                        @let mut iter = rows.iter();
+                        @let rows = match content["rows"].as_array() { Some(rows) => rows, None => continue };
                         table {
                             thead {
-                                @let row = iter.next().unwrap_or(&empty_value).as_array().unwrap_or(&empty_vec);
+                                @let row = match rows[0].as_array() { Some(row) => row, None => continue };
                                 tr {
                                     @for cell in row.iter() {
                                         th { (cell.as_str().unwrap_or_default()) }
@@ -127,10 +126,10 @@ fn render_article(path: String) -> Response {
                                 }
                             }
                             tbody {
-                                @for row in iter {
-                                    @let row = row.as_array().unwrap_or(&empty_vec);
+                                @for row in rows[1..].iter() {
                                     tr {
-                                        @for cell in row.iter() {
+                                        @let cells = match row.as_array() { Some(cells) => cells, None => continue };
+                                        @for cell in cells {
                                             td { (cell.as_str().unwrap_or_default()) }
                                         }
                                     }

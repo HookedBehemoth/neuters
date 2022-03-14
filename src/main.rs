@@ -1,8 +1,8 @@
 mod api;
 
 use api::{
-    common::Articles, error::ApiError, section::fetch_articles_by_section,
-    topic::fetch_articles_by_topic,
+    common::Articles, error::ApiError, search::fetch_articles_by_search,
+    section::fetch_articles_by_section, topic::fetch_articles_by_topic,
 };
 use cached::proc_macro::{cached, once};
 use chrono::{DateTime, Utc};
@@ -13,7 +13,7 @@ use crate::api::{article::fetch_article, byline};
 const CSS: &str = include_str!(concat!(env!("OUT_DIR"), "/main.css"));
 
 macro_rules! document {
-    ($title:expr, $content:expr, $( $head:expr )?) => {
+    ($title:expr, $content:expr, $( $head:expr )? ) => {
         html! {
             html lang="en" {
                 head {
@@ -33,7 +33,43 @@ macro_rules! document {
 
 fn main() {
     rouille::start_server("0.0.0.0:13369", move |request| {
-        let response = render_page(request.url());
+        let path = request.url();
+        let response = match path.as_str() {
+            "/favicon.ico" => Response {
+                code: 404,
+                body: Body::Data("image/x-icon", vec![]),
+                cache_time: 0,
+            },
+            "/" | "/home" => render_section("/home".to_string(), 8),
+            "/about" => render_about(),
+            "/search" | "/search/" => match request.get_param("query") {
+                Some(query) => {
+                    let offset = request
+                        .get_param("offset")
+                        .map(|s| s.parse::<u32>().unwrap_or(0))
+                        .unwrap_or(0);
+                    render_search(&query, offset, 10)
+                }
+                None => Response {
+                    code: 404,
+                    body: Body::Data("text/html", vec![]),
+                    cache_time: 0,
+                },
+            },
+            _ => {
+                if path.starts_with("/authors/") {
+                    let offset = request
+                        .get_param("offset")
+                        .map(|s| s.parse::<u32>().unwrap_or(0))
+                        .unwrap_or(0);
+                    render_topic(path, offset, 20)
+                } else if path.starts_with("/article/") {
+                    render_error(400, "Please disable forwards to this page.", &path)
+                } else {
+                    render_article(path)
+                }
+            }
+        };
 
         match response.body {
             Body::Html(body) => rouille::Response::html(body),
@@ -57,27 +93,6 @@ struct Response {
 enum Body {
     Html(String),
     Data(&'static str, Vec<u8>),
-}
-
-fn render_page(path: String) -> Response {
-    match path.as_str() {
-        "/favicon.ico" => Response {
-            code: 404,
-            body: Body::Data("image/x-icon", vec![]),
-            cache_time: 0,
-        },
-        "/" | "/home" => render_section("/home".to_string(), 8),
-        "/about" => render_about(),
-        _ => {
-            if path.starts_with("/authors/") {
-                render_topic(path, 0, 20)
-            } else if path.starts_with("/article/") {
-                render_error(400, "Please disable forwards to this page.", &path)
-            } else {
-                render_article(path)
-            }
-        }
-    }
 }
 
 #[cached(time = 86400)]
@@ -166,6 +181,10 @@ fn render_topic(path: String, offset: u32, size: u32) -> Response {
 #[cached(time = 3600)]
 fn render_section(path: String, size: u32) -> Response {
     render_articles(&path, fetch_articles_by_section(&path, size))
+}
+
+fn render_search(keywords: &str, offset: u32, size: u32) -> Response {
+    render_articles("/search", fetch_articles_by_search(keywords, offset, size))
 }
 
 fn render_articles(path: &str, response: Result<Articles, ApiError>) -> Response {

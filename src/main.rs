@@ -6,7 +6,7 @@ use api::{
 };
 use cached::proc_macro::{cached, once};
 use chrono::{DateTime, Utc};
-use maud::{html, PreEscaped};
+use maud::{DOCTYPE, html, PreEscaped};
 
 use crate::api::{article::fetch_article, byline};
 
@@ -15,6 +15,7 @@ const CSS: &str = include_str!(concat!(env!("OUT_DIR"), "/main.css"));
 macro_rules! document {
     ($title:expr, $content:expr, $( $head:expr )? ) => {
         html! {
+            (DOCTYPE)
             html lang="en" {
                 head {
                     title { ($title) }

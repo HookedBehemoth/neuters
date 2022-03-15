@@ -46,8 +46,7 @@ fn main() {
                 Some(query) => {
                     let offset = request
                         .get_param("offset")
-                        .map(|s| s.parse::<u32>().unwrap_or(0))
-                        .unwrap_or(0);
+                        .map_or(0, |s| s.parse::<u32>().unwrap_or(0));
                     render_search(&query, offset, 10)
                 }
                 None => Response {
@@ -60,8 +59,7 @@ fn main() {
                 if path.starts_with("/authors/") {
                     let offset = request
                         .get_param("offset")
-                        .map(|s| s.parse::<u32>().unwrap_or(0))
-                        .unwrap_or(0);
+                        .map_or(0, |s| s.parse::<u32>().unwrap_or(0));
                     render_topic(path, offset, 20)
                 } else if path.starts_with("/article/") {
                     render_error(400, "Please disable forwards to this page.", &path)

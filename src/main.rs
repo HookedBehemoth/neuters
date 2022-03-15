@@ -195,7 +195,7 @@ fn render_articles(path: &str, response: Result<Articles, ApiError>) -> Response
     };
 
     let doc = document!(
-        "Reuters Proxy",
+        "Neuters - Reuters Proxy",
         html! {
             ul {
                 @for article in articles.articles {

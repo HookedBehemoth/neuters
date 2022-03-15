@@ -1,5 +1,5 @@
 [package]
-name = "reuters"
+name = "neuters"
 version = "0.1.0"
 edition = "2021"
 
@@ -23,6 +23,5 @@ glob = "0.3.0"
 strip = true
 opt-level = 3
 lto = "fat"
-panic = "abort"
 debug = false
 codegen-units = 1

@@ -1,4 +1,4 @@
-let host = "https://boxcat.site";
+let host = "https://neuters.de";
 
 function redirectReuters(url) {
     const path = url.pathname;

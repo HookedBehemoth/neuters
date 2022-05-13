@@ -117,45 +117,7 @@ fn render_article(path: String) -> Response {
                 @let byline = byline::render_byline(&article.authors);
                 (time) " - " (PreEscaped(byline))
             }
-            @for content in article.content_elements.unwrap_or_default() {
-                @match content["type"].as_str() {
-                    Some("paragraph") => {
-                        @if let Some(content) = content["content"].as_str() {
-                            p { (PreEscaped(&content)) }
-                        }
-                    }
-                    Some("image") => {
-                        @if let Some(image) = content["url"].as_str() {
-                            img src=(image);
-                        }
-                    }
-                    Some("table") => {
-                        @let rows = match content["rows"].as_array() { Some(rows) => rows, None => continue };
-                        table {
-                            thead {
-                                @let row = match rows[0].as_array() { Some(row) => row, None => continue };
-                                tr {
-                                    @for cell in row.iter() {
-                                        th { (cell.as_str().unwrap_or_default()) }
-                                    }
-                                }
-                            }
-                            tbody {
-                                @for row in rows[1..].iter() {
-                                    tr {
-                                        @let cells = match row.as_array() { Some(cells) => cells, None => continue };
-                                        @for cell in cells {
-                                            td { (cell.as_str().unwrap_or_default()) }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    Some(unknown) => { p { "Unknown type: " (unknown) } }
-                    None => { p { "Failed to parse content element" } }
-                }
-            }
+            (render_items(&article.content_elements.unwrap_or_default()))
         ),
         html! {
             meta property="og:title" content=(&article.title);
@@ -169,6 +131,65 @@ fn render_article(path: String) -> Response {
         code: 200,
         body: Body::Html(doc.into_string()),
         cache_time: 24 * 60 * 60,
+    }
+}
+
+fn render_items(items: &[serde_json::Value]) -> maud::Markup { 
+    html! {
+        @for content in items {
+            @match content["type"].as_str() {
+                Some("paragraph") => {
+                    @if let Some(content) = content["content"].as_str() {
+                        p { (PreEscaped(&content)) }
+                    }
+                }
+                Some("image") => {
+                    @if let Some(image) = content["url"].as_str() {
+                        img src=(image);
+                    }
+                }
+                Some("table") => {
+                    @let rows = match content["rows"].as_array() { Some(rows) => rows, None => continue };
+                    table {
+                        thead {
+                            @let row = match rows[0].as_array() { Some(row) => row, None => continue };
+                            tr {
+                                @for cell in row.iter() {
+                                    th { (cell.as_str().unwrap_or_default()) }
+                                }
+                            }
+                        }
+                        tbody {
+                            @for row in rows[1..].iter() {
+                                tr {
+                                    @let cells = match row.as_array() { Some(cells) => cells, None => continue };
+                                    @for cell in cells {
+                                        td { (cell.as_str().unwrap_or_default()) }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Some("list") => {
+                    @if let Some(items) = content["items"].as_array() {
+                        (render_items(&items))
+                    }
+                }
+                Some("social_media") => {
+                    @if let Some(markup) = content["html"].as_str() {
+                        @let embed = if let Some(index) = markup.find("\n<script") {
+                            &markup[..index]
+                        } else {
+                            markup
+                        };
+                       (maud::PreEscaped(embed)) 
+                    }
+                }
+                Some(unknown) => { p { "Unknown type: " (unknown) } }
+                None => { p { "Failed to parse content element" } }
+            }
+        }
     }
 }
 

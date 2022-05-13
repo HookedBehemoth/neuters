@@ -6,7 +6,7 @@ use api::{
 };
 use cached::proc_macro::{cached, once};
 use chrono::{DateTime, Utc};
-use maud::{DOCTYPE, html, PreEscaped};
+use maud::{html, PreEscaped, DOCTYPE};
 
 use crate::api::{article::fetch_article, byline};
 
@@ -134,7 +134,7 @@ fn render_article(path: String) -> Response {
     }
 }
 
-fn render_items(items: &[serde_json::Value]) -> maud::Markup { 
+fn render_items(items: &[serde_json::Value]) -> maud::Markup {
     html! {
         @for content in items {
             @match content["type"].as_str() {
@@ -183,7 +183,7 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                         } else {
                             markup
                         };
-                       (maud::PreEscaped(embed)) 
+                       (maud::PreEscaped(embed))
                     }
                 }
                 Some(unknown) => { p { "Unknown type: " (unknown) } }

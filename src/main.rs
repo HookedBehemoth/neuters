@@ -173,7 +173,7 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                 }
                 Some("list") => {
                     @if let Some(items) = content["items"].as_array() {
-                        (render_items(&items))
+                        (render_items(items))
                     }
                 }
                 Some("social_media") => {

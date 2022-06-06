@@ -1,6 +1,6 @@
 # Neuters - Reuters Redirect
 
-This is an alternative frontent to [Reuters](https://reuters.com/). It is intented to be lightweight and fast and was heavily inspired by [Nitter](https://nitter.net/).
+This is an alternative frontend to [Reuters](https://reuters.com/). It is intented to be lightweight and fast and was heavily inspired by [Nitter](https://nitter.net/).
 
 A sample is hosted on [neuters.de](https://neuters.de/)
 

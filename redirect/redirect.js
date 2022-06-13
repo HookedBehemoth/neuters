@@ -14,23 +14,25 @@ function redirectReuters(url) {
     }
 }
 
-browser.webRequest.onBeforeRequest.addListener(
-    (details) => {
-        console.debug(details);
-        console.log(`Redirecting ${details.url}...`);
-        const url = new URL(details.url);
-        let redirect;
-        redirect = { redirectUrl: redirectReuters(url) };
-        if (redirect && redirect.redirectUrl) {
-            console.info("Details", details);
-        }
-        return redirect;
-    },
-    {
-        urls: [
-            "*://reuters.com/*",
-            "*://www.reuters.com/*"
-        ],
-    },
-    ["blocking"]
-);
+// I hate chromium I hate chromium I hate chromium I hate chromium I hate chromium I hate chromium
+if (chrome.webRequest) {
+    chrome.webRequest.onBeforeRequest.addListener(
+        (details) => {
+            console.debug(details);
+            console.debug(`Redirecting ${details.url}...`);
+            const url = new URL(details.url);
+            return { redirectUrl: redirectReuters(url) };
+        },
+        {
+            urls: [
+                "*://reuters.com/*",
+                "*://www.reuters.com/*"
+            ],
+        },
+        ["blocking"]
+    );
+} else {
+    console.debug(`Redirecting ${window.location}...`);
+    const url = new URL(window.location);
+    window.location = redirectReuters(url);
+}

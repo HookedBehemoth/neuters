@@ -138,6 +138,15 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
     html! {
         @for content in items {
             @match content["type"].as_str() {
+                Some("header") => {
+                    @if let Some(header) = content["content"].as_str() {
+                        @match content["level"].as_u64().unwrap_or(0) {
+                            0 => h1 { (header) },
+                            1 => h2 { (header) },
+                            _ => h3 { (header) },
+                        }
+                    }
+                }
                 Some("paragraph") => {
                     @if let Some(content) = content["content"].as_str() {
                         p { (PreEscaped(&content)) }

@@ -154,7 +154,9 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                 }
                 Some("image") => {
                     @if let Some(image) = content["url"].as_str() {
-                        img src=(image);
+                        @let alt = content["alt"].as_str();
+                        @let (width, height) = (content["width"].as_u64(), content["height"].as_u64());
+                        img src=(image) alt=[alt] width=[width] height=[height];
                     }
                 }
                 Some("graphic") => {
@@ -162,7 +164,7 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                         Some("image") => {
                             @if let (Some(image), Some(description)) = (content["url"].as_str(), content["description"].as_str()) {
                                 figure {
-                                    img src=(image);
+                                    img src=(image) alt=(description);
                                     figcaption { (description) }
                                 }
                             }

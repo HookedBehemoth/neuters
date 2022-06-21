@@ -66,6 +66,7 @@ thead {
 
 td {
   padding: 5px;
+
   &:first-child {
     padding-left: 10px;
   }
@@ -77,12 +78,18 @@ tbody {
   }
 }
 
+figcaption {
+  color: var(--fg_faded);
+  font-size: 14px;
+}
+
 footer {
   max-width: $page-width;
   margin: 1em auto;
   font-size: 14px;
   text-align: center;
   color: var(--fg_faded);
+
   a {
     color: var(--fg_faded);
   }

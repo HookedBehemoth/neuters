@@ -157,6 +157,20 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                         img src=(image);
                     }
                 }
+                Some("graphic") => {
+                    @match content["graphic_type"].as_str() {
+                        Some("image") => {
+                            @if let (Some(image), Some(description)) = (content["url"].as_str(), content["description"].as_str()) {
+                                figure {
+                                    img src=(image);
+                                    figcaption { (description) }
+                                }
+                            }
+                        }
+                        Some(unknown) => { p { "Unknown graphic type: " (unknown) } }
+                        None => { p { "Missing graphic type" } }
+                    }
+                }
                 Some("table") => {
                     @let rows = match content["rows"].as_array() { Some(rows) => rows, None => continue };
                     table {

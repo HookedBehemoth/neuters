@@ -189,7 +189,7 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                                 tr {
                                     @let cells = match row.as_array() { Some(cells) => cells, None => continue };
                                     @for cell in cells {
-                                        td { (cell.as_str().unwrap_or_default()) }
+                                        td { (PreEscaped(cell.as_str().unwrap_or_default())) }
                                     }
                                 }
                             }

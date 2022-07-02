@@ -8,7 +8,11 @@ use crate::{
     render::graph::render_graph_svg,
 };
 
-pub fn render_market(client: &ureq::Agent, path: &str, markit_token: &Mutex<ModToken>) -> ApiResult<String> {
+pub fn render_market(
+    client: &ureq::Agent,
+    path: &str,
+    markit_token: &Mutex<ModToken>,
+) -> ApiResult<String> {
     let company = if let Some(end) = path.find('/') {
         &path[..end]
     } else {
@@ -16,7 +20,12 @@ pub fn render_market(client: &ureq::Agent, path: &str, markit_token: &Mutex<ModT
     };
 
     let mut token = markit_token.lock().unwrap();
-    if SystemTime::now().duration_since(token.start).unwrap().as_secs() > token.expires_in {
+    if SystemTime::now()
+        .duration_since(token.start)
+        .unwrap()
+        .as_secs()
+        > token.expires_in
+    {
         *token = fetch_market_token(client)?;
     }
 

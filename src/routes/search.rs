@@ -5,12 +5,7 @@ use crate::api::{
 use crate::document;
 use maud::html;
 
-pub fn render_topic(
-    client: &ureq::Agent,
-    path: &str,
-    offset: u32,
-    size: u32,
-) -> ApiResult<String> {
+pub fn render_topic(client: &ureq::Agent, path: &str, offset: u32, size: u32) -> ApiResult<String> {
     render_articles(fetch_articles_by_topic(client, path, offset, size)?)
 }
 

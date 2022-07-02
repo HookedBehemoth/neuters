@@ -28,7 +28,9 @@ where
     if !is_success(response.status_code) || response.result.is_none() {
         Err(ApiError::External(
             response.status_code,
-            response.message.unwrap_or_else(|| "Unknown error".to_string()),
+            response
+                .message
+                .unwrap_or_else(|| "Unknown error".to_string()),
         ))
     } else {
         Ok(response.result.unwrap())

@@ -3,7 +3,10 @@ use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{api::fetch::{fetch, fetch_multiple}, de::unix::DateType};
+use crate::{
+    api::fetch::{fetch, fetch_multiple},
+    de::unix::DateType,
+};
 
 use super::{common::Articles, error::ApiResult};
 
@@ -204,10 +207,7 @@ pub fn quote(client: &ureq::Agent, symbols: &[&str]) -> ApiResult<Quotes> {
         net_change:netChange,\
         time:updatedTimeStamp";
 
-    let query = format!(
-        r#"{{"fields":"{FIELDS}","rics":"{}"}}"#,
-        symbols.join(",")
-    );
+    let query = format!(r#"{{"fields":"{FIELDS}","rics":"{}"}}"#, symbols.join(","));
 
     fetch_multiple(client, API_URL, &query)
 }

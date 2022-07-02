@@ -31,12 +31,12 @@ pub fn render_market(client: &ureq::Agent, path: &str, markit_token: &Mutex<ModT
             h1 { (quote.name) } (company)
             p {
                 "Last Trade: " (quote.last) " " (quote.currency) " "
-                @let sign = if quote.percent_change.is_sign_positive() {
-                    ('+', "color:green")
+                @let style = if quote.percent_change.is_sign_positive() {
+                    "color:green"
                 } else {
-                    ('-', "color:red")
+                    "color:red"
                 };
-                span style=(sign.1) { (sign.0)(format!("{:.2}", quote.percent_change)) }
+                span style=(style) { (format!("{:+.2}", quote.percent_change)) }
             }
             p { "Day Range: " (quote.day_low) " - " (quote.day_high) }
             p { "52 Week Range: " (quote.fiftytwo_wk_low) " - " (quote.fiftytwo_wk_high) }

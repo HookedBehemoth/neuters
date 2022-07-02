@@ -31,7 +31,6 @@ pub fn fetch_market_token(client: &ureq::Agent) -> ApiResult<ModToken> {
         .get(MODTOKEN_URL)
         .call()?
         .into_json::<ModTokenRaw>()?;
-    println!("{}, {}", token.access_token, token.expires_in);
     Ok(ModToken {
         token: token.access_token,
         expires_in: token.expires_in.parse().unwrap_or(14000),
@@ -64,8 +63,6 @@ pub fn fetch_ids(client: &ureq::Agent, token: &ModToken, names: &[&str]) -> ApiR
     }
     let query: Vec<Element> = names.iter().map(|n| Element { symbol: n }).collect();
     let query = serde_json::to_string(&query)?;
-
-    println!("query {}", query);
 
     let response: Exact = client
         .get(&url)

@@ -16,7 +16,7 @@ This is a work in progress. Please report any bugs or suggestions [above](https:
 If you have any questions, feel free to contact me at [admin@boxcat.site](mailto:admin@boxcat.site).
 
 ## Credits
-* [typed-html](https://github.com/bodil/typed-html), a fast and intuitive inline html macro
+* [maud](https://github.com/lambda-fairy/maud), a fast and intuitive inline html macro
 * [cached](https://github.com/jaemk/cached), a macro for caching responses
 
 ## License

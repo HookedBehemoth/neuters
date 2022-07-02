@@ -3,7 +3,6 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 pub struct Articles {
     pub pagination: Pagination,
-    // pub topics: Option<Vec<Topic>>,
     pub articles: Vec<Article>,
 }
 
@@ -40,7 +39,7 @@ pub struct Thumbnail {
 pub struct ApiResponse<T> {
     #[serde(rename = "statusCode")]
     pub status_code: u16,
-    pub message: String,
+    pub message: Option<String>,
     pub result: Option<T>,
 }
 

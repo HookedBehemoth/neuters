@@ -1,4 +1,5 @@
-use super::common::Topic;
+use crate::api::common::Topic;
+use std::fmt::Write;
 
 pub fn render_byline(authors: &[Topic]) -> String {
     match authors.len() {
@@ -13,11 +14,12 @@ pub fn render_byline(authors: &[Topic]) -> String {
                 byline.push_str(", ");
             }
 
-            byline.push_str(&format!(
+            let _ = write!(
+                byline,
                 "{} and {}",
                 format_author(&authors[author_count - 2]),
                 format_author(&authors[author_count - 1])
-            ));
+            );
 
             byline
         }

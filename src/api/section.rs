@@ -1,13 +1,14 @@
-use super::{common::Articles, error::ApiError, fetch::fetch};
+use super::{common::Articles, error::ApiResult, fetch::fetch};
 
 const API_URL: &str =
     "https://www.reuters.com/pf/api/v3/content/fetch/articles-by-section-alias-or-id-v1";
 
-pub fn fetch_articles_by_section(path: &str, size: u32) -> Result<Articles, ApiError> {
-    let query = format!(
-        r#"{{"size":{},"section_id":"{}","website":"reuters"}}"#,
-        size, path
-    );
+pub fn fetch_articles_by_section(
+    client: &ureq::Agent,
+    path: &str,
+    size: u32,
+) -> ApiResult<Articles> {
+    let query = format!(r#"{{"size":{size},"section_id":"{path}","website":"reuters"}}"#);
 
-    fetch(API_URL, &query)
+    fetch(client, API_URL, &query)
 }

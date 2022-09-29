@@ -47,7 +47,9 @@ pub fn render_market(
                 };
                 span style=(style) { (format!("{:+.2}", quote.percent_change)) }
             }
-            p { "Day Range: " (quote.day_low) " - " (quote.day_high) }
+            @if let (Some(low), Some(high)) = (quote.day_low, quote.day_high) {
+                p { "Day Range: " (low) " - " (high) }
+            }
             p { "52 Week Range: " (quote.fiftytwo_wk_low) " - " (quote.fiftytwo_wk_high) }
             (maud::PreEscaped(render_graph_svg(&graph)))
 

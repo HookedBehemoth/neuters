@@ -4,6 +4,8 @@ use serde::Deserialize;
 pub struct Articles {
     pub pagination: Pagination,
     pub articles: Vec<Article>,
+    pub topics: Option<Vec<Topic>>,
+    pub section: Option<SectionDescription>,
 }
 
 #[derive(Deserialize)]
@@ -41,6 +43,11 @@ pub struct ApiResponse<T> {
     pub status_code: u16,
     pub message: Option<String>,
     pub result: Option<T>,
+}
+
+#[derive(Deserialize)]
+pub struct SectionDescription {
+    pub name: String,
 }
 
 #[derive(Deserialize)]

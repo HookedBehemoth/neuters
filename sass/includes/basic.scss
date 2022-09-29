@@ -88,6 +88,14 @@ figcaption {
   font-size: 14px;
 }
 
+.nav {
+  text-align: center;
+
+  a {
+    padding: 0px 10px;
+  }
+}
+
 footer {
   max-width: $page-width;
   margin: 1em auto;

@@ -6,9 +6,10 @@ const API_URL: &str =
 pub fn fetch_articles_by_section(
     client: &ureq::Agent,
     path: &str,
+    offset: u32,
     size: u32,
 ) -> ApiResult<Articles> {
-    let query = format!(r#"{{"size":{size},"section_id":"{path}","website":"reuters"}}"#);
+    let query = format!(r#"{{"offset":{offset},"size":{size},"section_id":"{path}","website":"reuters"}}"#);
 
     fetch(client, API_URL, &query)
 }

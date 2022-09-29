@@ -28,7 +28,12 @@ macro_rules! document {
                 }
                 body {
                     main { ($content) }
-                    footer { div { a href="/" { "Home" } " - " a href="/about" { "About" } } }
+                    footer { div {
+                        a href="/" { "Home" }
+                        " - "
+                        a href="/search" { "Search" }
+                        " - "
+                        a href="/about" { "About" } } }
                 }
             }
         }
@@ -91,22 +96,16 @@ fn main() {
 
     let markit_token = Arc::new(Mutex::new(fetch_market_token(&client).unwrap()));
 
-    rouille::start_server("0.0.0.0:13369", move |request| {
+    let address = "127.0.0.0:13369";
+    println!("Listening on http://{}", address);
+    rouille::start_server(address, move |request| {
         let path = request.url();
         let response = match path.as_str() {
-            "/" | "/home" => render_section(&client, "/home".to_string(), 8),
+            "/" | "/home" => {
+                render_section(&client, "/home", 0, 8)
+            },
             "/about" => render_about(),
-            "/search" | "/search/" => match request.get_param("query") {
-                Some(query) => {
-                    let offset = request
-                        .get_param("offset")
-                        .map_or(0, |s| s.parse::<u32>().unwrap_or(0));
-                    render_search(&client, &query, offset, 10)
-                }
-                _ => Err(ApiError::External(
-                    400,
-                    "Missing query arguments".to_owned(),
-                )),
+            "/search" | "/search/" => render_search(&client, request),
             "/main.css" => {
                 return rouille::Response{
                     status_code: 200,

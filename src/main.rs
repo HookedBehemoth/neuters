@@ -22,7 +22,7 @@ macro_rules! document {
             html lang="en" {
                 head {
                     title { ($title) }
-                    style { (crate::CSS) }
+                    link rel="stylesheet" href="/main.css?v=0";
                     meta name="viewport" content="width=device-width, initial-scale=1";
                     $( ($head) )?
                 }
@@ -107,6 +107,16 @@ fn main() {
                     400,
                     "Missing query arguments".to_owned(),
                 )),
+            "/main.css" => {
+                return rouille::Response{
+                    status_code: 200,
+                    headers: vec![
+                        ("Content-Type".into(), "text/css".into()),
+                        ("Cache-Control".into(), "public, max-age=31536000".into()),
+                    ],
+                    data: rouille::ResponseBody::from_string(CSS),
+                    upgrade: None
+                };
             },
             "/favicon.ico" => Err(ApiError::Empty),
             _ => {

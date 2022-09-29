@@ -110,10 +110,12 @@ fn render_articles(
                     li { a href=(&article.canonical_url) { (&article.title) } }
                 }
             }
-            div.nav {
-                a href=[prev_page] { "<" }
-                ((offset + 1)) " to " ((offset + count)) " of " (total)
-                a href=[next_page] { ">" }
+            @if total != 0 {
+                div.nav {
+                    a href=[prev_page] { "<" }
+                    ((offset + 1)) " to " ((offset + count)) " of " (total)
+                    a href=[next_page] { ">" }
+                }
             }
         },
     );

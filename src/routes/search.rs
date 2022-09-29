@@ -112,7 +112,7 @@ fn render_articles(
             }
             div.nav {
                 a href=[prev_page] { "<" }
-                ((offset + 1)) " to " ((offset + count + 1)) " of " (total)
+                ((offset + 1)) " to " ((offset + count)) " of " (total)
                 a href=[next_page] { ">" }
             }
         },

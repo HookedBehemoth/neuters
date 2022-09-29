@@ -33,8 +33,8 @@ pub fn render_search(client: &ureq::Agent, request: &rouille::Request) -> ApiRes
                 .map_or(0, |s| s.parse::<u32>().unwrap_or(0));
             let size = request
                 .get_param("size")
-                .map_or(0, |s| s.parse::<u32>().unwrap_or(10))
-                .clamp(1, 30);
+                .map_or(20, |s| s.parse::<u32>().unwrap_or(20))
+                .clamp(1, 20);
 
             render_search_impl(
                 Some(fetch_articles_by_search(client, &query, offset, size)?),

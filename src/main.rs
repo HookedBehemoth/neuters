@@ -96,7 +96,7 @@ fn main() {
 
     let markit_token = Arc::new(Mutex::new(fetch_market_token(&client).unwrap()));
 
-    let address = "127.0.0.0:13369";
+    let address = "127.0.0.1:13369";
     println!("Listening on http://{}", address);
     rouille::start_server(address, move |request| {
         let path = request.url();

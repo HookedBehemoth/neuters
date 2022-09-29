@@ -5,9 +5,11 @@ use crate::api::{
 use crate::document;
 use maud::html;
 
+#[derive(PartialEq)]
 enum SearchType {
     Topic,
     Section,
+    Query,
 }
 
 pub fn render_topic(client: &ureq::Agent, path: &str, offset: u32, size: u32) -> ApiResult<String> {
@@ -36,35 +38,25 @@ pub fn render_search(client: &ureq::Agent, request: &rouille::Request) -> ApiRes
                 .map_or(20, |s| s.parse::<u32>().unwrap_or(20))
                 .clamp(1, 20);
 
-            render_search_impl(
-                Some(fetch_articles_by_search(client, &query, offset, size)?),
-                &query,
-            )
+            let articles = fetch_articles_by_search(client, &query, offset, size)?;
+
+            render_articles(articles, &query, offset, size, SearchType::Query)
         }
-        _ => render_search_impl(None, ""),
-    }
-}
-
-fn render_search_impl(articles: Option<Articles>, query: &str) -> ApiResult<String> {
-    let doc = document!(
-        "Neuters - Reuters Proxy - Search",
-        html! {
-            h1 { "Search: " (query) }
-            form {
-                input type="text" name="query" placeholder="Keywords..." value=(query) required="";
-                button type="submit" { "Search" }
-            }
-            @if let Some(articles) = articles {
-                ul {
-                    @for article in articles.articles {
-                        li { a href=(&article.canonical_url) { (&article.title) } }
+        _ => {
+            let doc = document!(
+                "Neuters - Reuters Proxy - Search",
+                html! {
+                    h1 { "Search:" }
+                    form {
+                        input type="text" name="query" placeholder="Keywords..." required="";
+                        button type="submit" { "Search" }
                     }
-                }
-            }
-        },
-    );
+                },
+            );
 
-    Ok(doc.into_string())
+            Ok(doc.into_string())
+        }
+    }
 }
 
 fn render_articles(
@@ -74,29 +66,39 @@ fn render_articles(
     steps: u32,
     search_type: SearchType,
 ) -> ApiResult<String> {
-    let title = match search_type {
-        SearchType::Section => articles.section.as_ref().map(|s| s.name.as_str()),
-        SearchType::Topic => articles
-            .topics
-            .as_ref()
-            .map(|t| t.get(0).map(|t| t.name.as_str()))
-            .flatten(),
-    }
-    .unwrap_or("");
+    let (title, url) = match search_type {
+        SearchType::Section => (
+            articles
+                .section
+                .as_ref()
+                .map(|s| s.name.as_str())
+                .unwrap_or(""),
+            format!("{path}?"),
+        ),
+        SearchType::Topic => (
+            articles
+                .topics
+                .as_ref()
+                .map(|t| t.get(0).map(|t| t.name.as_str()))
+                .flatten()
+                .unwrap_or(""),
+            format!("{path}?"),
+        ),
+        SearchType::Query => (path, format!("/search?query={path}&")),
+    };
 
     let count = articles.articles.len() as u32;
     let total = articles.pagination.total_size;
     let (has_prev, has_next) = (offset > 0, offset + count < total);
     let prev_page = if has_prev {
-        Some(format!("{path}?offset={}", offset.saturating_sub(count)))
+        let offset = offset.saturating_sub(steps);
+        Some(format!("{url}steps={steps}&offset={offset}"))
     } else {
         None
     };
     let next_page = if has_next {
-        Some(format!(
-            "{path}?offset={}",
-            offset.saturating_add(steps).min(total - 1)
-        ))
+        let offset = offset.saturating_add(steps).min(total - 1);
+        Some(format!("{url}steps={steps}&offset={offset}"))
     } else {
         None
     };
@@ -105,6 +107,12 @@ fn render_articles(
         "Neuters - Reuters Proxy",
         html! {
             h1 { (title) }
+            @if search_type == SearchType::Query {
+                form {
+                    input type="text" name="query" placeholder="Keywords..." value=(path) required="";
+                    button type="submit" { "Search" }
+                }
+            }
             ul {
                 @for article in articles.articles {
                     li { a href=(&article.canonical_url) { (&article.title) } }

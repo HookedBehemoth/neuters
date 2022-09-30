@@ -42,6 +42,11 @@ macro_rules! document {
 pub(crate) use document;
 
 fn main() {
+    let mut pargs = pico_args::Arguments::from_env();
+    let list_address: String = pargs
+        .value_from_str("--address")
+        .unwrap_or_else(|_| "127.0.0.1:13369".into());
+
     let client: ureq::Agent = {
         let certs = rustls_native_certs::load_native_certs().expect("Could not load certs!");
 
@@ -96,27 +101,24 @@ fn main() {
 
     let markit_token = Arc::new(Mutex::new(fetch_market_token(&client).unwrap()));
 
-    let address = "127.0.0.1:13369";
-    println!("Listening on http://{}", address);
-    rouille::start_server(address, move |request| {
+    println!("Listening on http://{}", list_address);
+    rouille::start_server(list_address, move |request| {
         let path = request.url();
         let response = match path.as_str() {
-            "/" | "/home" => {
-                render_section(&client, "/home", 0, 8)
-            },
+            "/" | "/home" => render_section(&client, "/home", 0, 8),
             "/about" => render_about(),
             "/search" | "/search/" => render_search(&client, request),
             "/main.css" => {
-                return rouille::Response{
+                return rouille::Response {
                     status_code: 200,
                     headers: vec![
                         ("Content-Type".into(), "text/css".into()),
                         ("Cache-Control".into(), "public, max-age=31536000".into()),
                     ],
                     data: rouille::ResponseBody::from_string(CSS),
-                    upgrade: None
+                    upgrade: None,
                 };
-            },
+            }
             "/favicon.ico" => Err(ApiError::Empty),
             _ => {
                 if path.starts_with("/authors/") {

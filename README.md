@@ -17,7 +17,6 @@ If you have any questions, feel free to contact me at [admin@boxcat.site](mailto
 
 ## Credits
 * [maud](https://github.com/lambda-fairy/maud), a fast and intuitive inline html macro
-* [cached](https://github.com/jaemk/cached), a macro for caching responses
 
 ## License
 This project is licensed under the GNU Affero General Public License.

@@ -79,8 +79,7 @@ fn render_articles(
             articles
                 .topics
                 .as_ref()
-                .map(|t| t.get(0).map(|t| t.name.as_str()))
-                .flatten()
+                .and_then(|t| t.get(0).map(|t| t.name.as_str()))
                 .unwrap_or(""),
             format!("{path}?"),
         ),

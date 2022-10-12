@@ -86,7 +86,7 @@ fn render_articles(
         SearchType::Query => (path, format!("/search?query={path}&")),
     };
 
-    let count = articles.articles.len() as u32;
+    let count = articles.articles.as_ref().map(|a| a.len() as u32).unwrap_or(0);
     let total = articles.pagination.total_size;
     let (has_prev, has_next) = (offset > 0, offset + count < total);
     let prev_page = if has_prev {
@@ -112,17 +112,21 @@ fn render_articles(
                     button type="submit" { "Search" }
                 }
             }
-            ul {
-                @for article in articles.articles {
-                    li { a href=(&article.canonical_url) { (&article.title) } }
+            @if let Some(articles) = articles.articles {
+                ul {
+                    @for article in articles {
+                        li { a href=(&article.canonical_url) { (&article.title) } }
+                    }
                 }
-            }
-            @if total != 0 {
-                div.nav {
-                    a href=[prev_page] { "<" }
-                    ((offset + 1)) " to " ((offset + count)) " of " (total)
-                    a href=[next_page] { ">" }
+                @if total != 0 {
+                    div.nav {
+                        a href=[prev_page] { "<" }
+                        ((offset + 1)) " to " ((offset + count)) " of " (total)
+                        a href=[next_page] { ">" }
+                    }
                 }
+            } @else {
+                p { "No results found!" }
             }
         },
     );

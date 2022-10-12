@@ -3,7 +3,7 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 pub struct Articles {
     pub pagination: Pagination,
-    pub articles: Vec<Article>,
+    pub articles: Option<Vec<Article>>,
     pub topics: Option<Vec<Topic>>,
     pub section: Option<SectionDescription>,
 }

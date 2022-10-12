@@ -53,9 +53,11 @@ pub fn render_market(
             p { "52 Week Range: " (quote.fiftytwo_wk_low) " - " (quote.fiftytwo_wk_high) }
             (maud::PreEscaped(render_graph_svg(&graph)))
 
-            ul {
-                @for article in articles.articles {
-                    li { a href=(&article.canonical_url) { (&article.title) } }
+            @if let Some(articles) = articles.articles {
+                ul {
+                    @for article in articles {
+                        li { a href=(&article.canonical_url) { (&article.title) } }
+                    }
                 }
             }
         },

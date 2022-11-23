@@ -19,8 +19,10 @@ pub fn render_article(client: &ureq::Agent, path: &str) -> ApiResult<String> {
             h1 { (&article.title) }
             p class="byline" {
                 @let time = published_time.format("%Y-%m-%d %H:%M").to_string();
-                @let byline = byline::render_byline(&article.authors);
-                (time) " - " (PreEscaped(byline))
+                @if let Some(authors) = &article.authors {
+                    @let byline = byline::render_byline(authors);
+                    (time) " - " (PreEscaped(byline))
+                }
             }
             (render_items(&article.content_elements.unwrap_or_default()))
         ),

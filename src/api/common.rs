@@ -21,7 +21,7 @@ pub struct Article {
     pub canonical_url: String,
     pub description: String,
     pub content_elements: Option<Vec<serde_json::Value>>,
-    pub authors: Vec<Topic>,
+    pub authors: Option<Vec<Topic>>,
     pub published_time: String,
     pub thumbnail: Option<Thumbnail>,
 }

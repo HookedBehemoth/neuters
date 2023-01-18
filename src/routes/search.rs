@@ -86,7 +86,11 @@ fn render_articles(
         SearchType::Query => (path, format!("/search?query={path}&")),
     };
 
-    let count = articles.articles.as_ref().map(|a| a.len() as u32).unwrap_or(0);
+    let count = articles
+        .articles
+        .as_ref()
+        .map(|a| a.len() as u32)
+        .unwrap_or(0);
     let total = articles.pagination.total_size;
     let (has_prev, has_next) = (offset > 0, offset + count < total);
     let prev_page = if has_prev {

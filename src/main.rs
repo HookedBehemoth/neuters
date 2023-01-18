@@ -9,6 +9,7 @@ use api::{error::ApiError, markit::fetch_market_token};
 use routes::{
     about::render_about,
     article::render_article,
+    internet_news::render_internet_news,
     markets::render_market,
     search::{render_search, render_section, render_topic},
 };
@@ -127,10 +128,7 @@ fn main() {
                         .map_or(0, |s| s.parse::<u32>().unwrap_or(0));
                     render_topic(&client, &path, offset, 20)
                 } else if path.starts_with("/article/") {
-                    Err(ApiError::External(
-                        400,
-                        "Please disable forwards to this page.".to_owned(),
-                    ))
+                    render_internet_news(&client, &path)
                 } else if let Some(path) = path.strip_prefix("/companies/") {
                     render_market(&client, path, &markit_token.clone())
                 } else if let Some(path) = path.strip_prefix("/markets/companies/") {

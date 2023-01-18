@@ -11,17 +11,19 @@ pub fn render_article(client: &ureq::Agent, path: &str) -> ApiResult<String> {
     let published_time = article
         .published_time
         .parse::<DateTime<Utc>>()
-        .unwrap_or_else(|_| Utc::now());
+        .map(|time| time.format("%Y-%m-%d %H:%M").to_string());
 
     let doc = crate::document!(
         &article.title,
         html!(
             h1 { (&article.title) }
             p class="byline" {
-                @let time = published_time.format("%Y-%m-%d %H:%M").to_string();
                 @if let Some(authors) = &article.authors {
                     @let byline = byline::render_byline(authors);
-                    (time) " - " (PreEscaped(byline))
+                    @if let Ok(time) = published_time {
+                        (time) " - "
+                    }
+                    (PreEscaped(byline))
                 }
             }
             (render_items(&article.content_elements.unwrap_or_default()))

@@ -2,7 +2,7 @@
     "name": "Reuters Redirect",
     "description": "Redirects Reuters articles to a more privacy and lightweight oriented frontend.",
     "manifest_version": 2,
-    "version": "1.0",
+    "version": "1.1",
     "background": {
         "scripts": [
             "redirect.js"

@@ -2,12 +2,51 @@ use chrono::{DateTime, Utc};
 use maud::{html, PreEscaped};
 
 use crate::{
-    api::{error::ApiResult, internet_news::fetch_internet_news},
-    render::internet_news_byline::render_byline,
+    api::{
+        error::{ApiError, ApiResult},
+        legacy_article::{fetch_legacy_article, parse_legacy_article},
+    },
+    render::legacy_article_byline::render_byline,
 };
 
-pub fn render_internet_news(client: &ureq::Agent, path: &str) -> ApiResult<String> {
-    let news = fetch_internet_news(client, path)?;
+pub fn render_legacy_article(
+    client: &ureq::Agent,
+    path: &str,
+) -> Result<ApiResult<String>, rouille::Response> {
+    let response = match fetch_legacy_article(client, path) {
+        Ok(response) => response,
+        Err(err) => {
+            return Ok(Err(ApiError::from(err)));
+        }
+    };
+
+    let news = match response.status() {
+        200..=299 => parse_legacy_article(response),
+        300..=399 => {
+            let target = response.header("location").unwrap();
+            return Err(rouille::Response {
+                status_code: response.status(),
+                headers: vec![("Location".into(), target.to_owned().into())],
+                data: rouille::ResponseBody::empty(),
+                upgrade: None,
+            });
+        }
+        code => {
+            return Ok(Err(ApiError::External(
+                code,
+                response
+                    .into_string()
+                    .unwrap_or_else(|_| "Unknown error".to_string()),
+            )));
+        }
+    };
+
+    let news = match news {
+        Ok(news) => news,
+        Err(err) => {
+            return Ok(Err(err));
+        }
+    };
 
     let article = &news.props.initial_state.article.stream[0];
 
@@ -51,5 +90,5 @@ pub fn render_internet_news(client: &ureq::Agent, path: &str) -> ApiResult<Strin
         }
     );
 
-    Ok(doc.into_string())
+    Ok(Ok(doc.into_string()))
 }

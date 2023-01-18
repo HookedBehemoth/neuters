@@ -1,8 +1,8 @@
 use std::fmt::Write;
 
-use crate::api::internet_news::InternetNewsAuthor;
+use crate::api::legacy_article::LegacyArticleAuthor;
 
-pub fn render_byline(authors: &[InternetNewsAuthor]) -> String {
+pub fn render_byline(authors: &[LegacyArticleAuthor]) -> String {
     match authors.len() {
         0 => "".to_string(),
         1 => format_author(&authors[0]),
@@ -27,7 +27,7 @@ pub fn render_byline(authors: &[InternetNewsAuthor]) -> String {
     }
 }
 
-pub fn format_author(author: &InternetNewsAuthor) -> String {
+pub fn format_author(author: &LegacyArticleAuthor) -> String {
     match author
         .url
         .strip_prefix("https://www.reuters.com/journalists/")

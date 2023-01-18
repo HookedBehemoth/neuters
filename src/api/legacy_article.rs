@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use serde::Deserialize;
 
 use crate::api::error::ApiError;
@@ -7,60 +5,65 @@ use crate::api::error::ApiError;
 use super::error::ApiResult;
 
 #[derive(Deserialize)]
-pub struct InternetNews {
-    pub props: InternetNewsProps,
+pub struct LegacyArticle {
+    pub props: LegacyArticleProps,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct InternetNewsProps {
-    pub initial_state: InternetNewsInitialState,
+pub struct LegacyArticleProps {
+    pub initial_state: LegacyArticleInitialState,
 }
 
 #[derive(Deserialize)]
-pub struct InternetNewsInitialState {
-    pub article: InternetNewsArticle,
+pub struct LegacyArticleInitialState {
+    pub article: LegacyArticleArticle,
 }
 
 #[derive(Deserialize)]
-pub struct InternetNewsArticle {
-    pub stream: Vec<InternetNewsStream>,
+pub struct LegacyArticleArticle {
+    pub stream: Vec<LegacyArticleStream>,
 }
 
 #[derive(Deserialize)]
-pub struct InternetNewsStream {
+pub struct LegacyArticleStream {
     pub id: String,
     pub headline: String,
     pub description: String,
-    pub date: InternetNewsDate,
-    pub authors: Vec<InternetNewsAuthor>,
-    pub body_items: Vec<InternetNewsBodyItem>,
+    pub date: LegacyArticleDate,
+    pub authors: Vec<LegacyArticleAuthor>,
+    pub body_items: Vec<LegacyArticleBodyItem>,
 }
 
 #[derive(Deserialize)]
-pub struct InternetNewsDate {
+pub struct LegacyArticleDate {
     pub published: String,
 }
 
 #[derive(Deserialize)]
-pub struct InternetNewsAuthor {
+pub struct LegacyArticleAuthor {
     pub name: String,
     pub url: String,
 }
 
 #[derive(Deserialize)]
-pub struct InternetNewsBodyItem {
+pub struct LegacyArticleBodyItem {
     pub r#type: String,
     pub content: String,
 }
 
-pub fn fetch_internet_news(client: &ureq::Agent, path: &str) -> ApiResult<InternetNews> {
+pub fn fetch_legacy_article(
+    client: &ureq::Agent,
+    path: &str,
+) -> Result<ureq::Response, ureq::Error> {
     let link = format!("https://www.reuters.com{path}");
-    println!("-> {link}");
-    let request = client.get(&link).call()?;
+
+    client.get(&link).call()
+}
+
+pub fn parse_legacy_article(request: ureq::Response) -> ApiResult<LegacyArticle> {
     let html = request.into_string()?;
 
-    let start = Instant::now();
     let dom = tl::parse(&html, tl::ParserOptions::default()).unwrap();
     let parser = dom.parser();
     let element = dom
@@ -69,8 +72,6 @@ pub fn fetch_internet_news(client: &ureq::Agent, path: &str) -> ApiResult<Intern
         .get(parser)
         .ok_or_else(|| ApiError::Internal("Failed to parse Internet News article".to_owned()))?;
     let json = element.inner_text(parser);
-    let elapsed = Instant::now() - start;
-    println!("Elapsed: {}ms", elapsed.as_secs_f64() * 1000.0);
 
     let json = serde_json::from_str(&json)?;
 

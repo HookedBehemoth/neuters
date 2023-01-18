@@ -39,7 +39,10 @@ impl<'de> serde::de::Visitor<'de> for DateTimeListVisitor {
     where
         E: serde::de::Error,
     {
-        Ok(DateType(chrono::NaiveDateTime::from_timestamp(v, 0).date()))
+        match chrono::NaiveDateTime::from_timestamp_opt(v, 0) {
+            Some(datetime) => Ok(DateType(datetime.date())),
+            None => Err(serde::de::Error::invalid_value(serde::de::Unexpected::Signed(v), &"Timestamp")),
+        }
     }
 }
 

@@ -1,0 +1,23 @@
+version: "3.8"
+
+volumes:
+
+services:
+  neuters:
+    container_name: neuters
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3004:13369
+    user: 65534:65534
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - neuters
+
+networks:
+  neuters:

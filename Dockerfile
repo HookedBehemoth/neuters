@@ -9,7 +9,7 @@ COPY . .
 RUN cargo install --path .
 
 # Final Image
-FROM gcr.io/distroless/cc
+FROM gcr.io/distroless/static
 
 COPY --from=builder /usr/local/cargo/bin/neuters /
 

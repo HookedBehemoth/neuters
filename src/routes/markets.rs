@@ -1,63 +1,21 @@
-use std::{sync::Mutex, time::SystemTime};
+use crate::api::{error::ApiResult, markit::fetch_by_stock_symbol};
 
-use crate::{
-    api::{
-        error::ApiResult,
-        markit::{fetch_graph, fetch_ids, fetch_market_token, quote, related_articles, ModToken},
-    },
-    render::graph::render_graph_svg,
-};
-
-pub fn render_market(
-    client: &ureq::Agent,
-    path: &str,
-    markit_token: &Mutex<ModToken>,
-) -> ApiResult<String> {
+pub fn render_market(client: &ureq::Agent, path: &str) -> ApiResult<String> {
     let company = if let Some(end) = path.find('/') {
         &path[..end]
     } else {
         path
     };
 
-    let mut token = markit_token.lock().unwrap();
-    if SystemTime::now()
-        .duration_since(token.start)
-        .unwrap()
-        .as_secs()
-        > token.expires_in
-    {
-        *token = fetch_market_token(client)?;
-    }
-
-    let ids = fetch_ids(client, &token, &[company])?;
-    let graph = fetch_graph(client, &token, &ids)?;
-    let quote = &quote(client, &[company])?.market_data[0];
-    let articles = related_articles(client, company)?;
+    let articles = fetch_by_stock_symbol(client, company)?;
 
     let document = crate::document! {
-        (graph.Elements[0].CompanyName),
+        company,
         maud::html! {
-            h1 { (quote.name) } (company)
-            p {
-                "Last Trade: " (quote.last) " " (quote.currency) " "
-                @let style = if quote.percent_change.is_sign_positive() {
-                    "color:green"
-                } else {
-                    "color:red"
-                };
-                span style=(style) { (format!("{:+.2}", quote.percent_change)) }
-            }
-            @if let (Some(low), Some(high)) = (quote.day_low, quote.day_high) {
-                p { "Day Range: " (low) " - " (high) }
-            }
-            p { "52 Week Range: " (quote.fiftytwo_wk_low) " - " (quote.fiftytwo_wk_high) }
-            (maud::PreEscaped(render_graph_svg(&graph)))
-
-            @if let Some(articles) = articles.articles {
-                ul {
-                    @for article in articles {
-                        li { a href=(&article.canonical_url) { (&article.title) } }
-                    }
+            company
+            ul {
+                @for article in articles.articles {
+                    li { a href=(&article.canonical_url) { (&article.title) } }
                 }
             }
         },

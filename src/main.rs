@@ -1,11 +1,8 @@
 mod api;
-mod de;
 mod render;
 mod routes;
 
-use std::sync::{Arc, Mutex};
-
-use api::{error::ApiError, markit::fetch_market_token};
+use api::error::ApiError;
 use routes::{
     about::render_about,
     article::render_article,
@@ -100,8 +97,6 @@ fn main() {
         client_builder.build()
     };
 
-    let markit_token = Arc::new(Mutex::new(fetch_market_token(&client).unwrap()));
-
     println!("Listening on http://{}", list_address);
     rouille::start_server(list_address, move |request| {
         let path = request.url();
@@ -133,9 +128,9 @@ fn main() {
                         Err(response) => return response,
                     }
                 } else if let Some(path) = path.strip_prefix("/companies/") {
-                    render_market(&client, path, &markit_token.clone())
+                    render_market(&client, path)
                 } else if let Some(path) = path.strip_prefix("/markets/companies/") {
-                    render_market(&client, path, &markit_token.clone())
+                    render_market(&client, path)
                 } else {
                     render_article(&client, &path)
                 }

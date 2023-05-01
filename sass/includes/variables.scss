@@ -12,22 +12,22 @@ $dark-text-color: #ddd;
 
 
 @media (prefers-color-scheme: light) {
-    body {
-      background-color: var(--background);
-      color: var(--color);
-    }
+  body {
+    background-color: var(--background);
+    color: var(--color);
   }
+}
   
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --color: $dark-text-color;
-      --background: $dark-bg-color;
-    }
-    body {
-      background-color: var(--background);
-      color: var(--color);
-    }
-  }  
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color: $dark-text-color;
+    --background: $dark-bg-color;
+  }
+  body {
+    background-color: var(--background);
+    color: var(--color);
+  }
+}
 
 $page-width: 900px;
 

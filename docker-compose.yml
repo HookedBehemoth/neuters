@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - 3004:13369
+      - '127.0.0.1:3004:13369'
     user: 65534:65534
     read_only: true
     security_opt:

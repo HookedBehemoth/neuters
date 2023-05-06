@@ -2,7 +2,12 @@
 
 This is an alternative frontent to [Reuters](https://reuters.com/). It is intented to be lightweight and fast and was heavily inspired by [Nitter](https://nitter.net/).
 
-Public instance: [neuters.de](https://neuters.de/)
+Public Instances:
+
+| Domain                                                                      | Hosting                                   | SSL Provider                                                                                    |
+|:---------------------------------------------------------------------------:|:-----------------------------------------:|:-----------------------------------------------------------------------------------------------:|
+| [neuters.de](https://neuters.de/) (Official)                                | [IONOS](https://www.ionos.com/)          | [Let's Encrypt](https://www.ssllabs.com/ssltest/analyze.html?d=neuters.de)                       |
+| [news.whateveritworks.org](https://neuters.de/)                               | [Hetzner](https://www.hetzner.com)          | [Let's Encrypt](https://www.ssllabs.com/ssltest/analyze.html?d=news.whateveritworks.org)         |
 
 * No JavaScript or ads
 * No tracking

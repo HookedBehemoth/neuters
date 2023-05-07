@@ -7,7 +7,7 @@ Public Instances:
 | Domain                                                                      | Hosting                                   | SSL Provider                                                                                    |
 |:---------------------------------------------------------------------------:|:-----------------------------------------:|:-----------------------------------------------------------------------------------------------:|
 | [neuters.de](https://neuters.de/) (Official)                                | [IONOS](https://www.ionos.com/)          | [Let's Encrypt](https://www.ssllabs.com/ssltest/analyze.html?d=neuters.de)                       |
-| [news.whateveritworks.org](https://neuters.de/)                               | [Hetzner](https://www.hetzner.com)          | [Let's Encrypt](https://www.ssllabs.com/ssltest/analyze.html?d=news.whateveritworks.org)         |
+| [news.whateveritworks.org](https://news.whateveritworks.org)                               | [Hetzner](https://www.hetzner.com)          | [Let's Encrypt](https://www.ssllabs.com/ssltest/analyze.html?d=news.whateveritworks.org)      |
 
 * No JavaScript or ads
 * No tracking

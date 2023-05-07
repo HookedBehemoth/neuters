@@ -15,7 +15,7 @@ pub fn render_about() -> ApiResult<String> {
                 li { "Lightweight (usually <10KiB vs 50MiB from Reuters)" }
                 li { "Dynamic Theming (respects system theme)" }
             }
-            p { "You can install " a href="https://addons.mozilla.org/en-US/firefox/addon/reuters-redirect/" { "this browser extension" } " to automatically forwards all reuters links to this site." }
+            p { "You can install " a href="https://github.com/libredirect/browser_extension" { "this browser extension" } " to automatically forwards all reuters links to this site." }
             p { "This is a work in progress. Please report any bugs or suggestions at " a href="https://github.com/HookedBehemoth/supreme-waffle" { "GitHub" } "." }
 
             h2 { "Contact" }

@@ -4,19 +4,19 @@ version = "0.1.1"
 edition = "2021"
 
 [dependencies]
-rouille = { version = "3.5", default-features = false }
+rouille = { version = "3.6", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-maud = "0.24"
+maud = "0.25"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
-ureq = { version = "2.4", features = ["json", "tls", "rustls"] }
-rustls = { version = "0.20", default-features = false }
+ureq = { version = "2.7", features = ["json", "tls", "rustls"] }
+rustls = { version = "0.21", default-features = false }
 rustls-native-certs = "0.6"
 pico-args = "0.5.0"
 tl = "0.7.7"
 
 [build-dependencies]
-grass = "0.11"
+grass = "0.12"
 glob = "0.3"
 
 [profile.release]

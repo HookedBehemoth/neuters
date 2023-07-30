@@ -16,7 +16,7 @@ pico-args = "0.5.0"
 tl = "0.7.7"
 
 [build-dependencies]
-grass = "0.12"
+grass = "0.13"
 glob = "0.3"
 
 [profile.release]

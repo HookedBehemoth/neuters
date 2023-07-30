@@ -9,7 +9,7 @@ use super::{
 pub struct StockSearchResult {
     pub pagination: Pagination,
     pub market_info: MarketInfo,
-    pub articles: Vec<Article>,
+    pub articles: Box<[Article]>,
 }
 
 #[derive(serde::Deserialize)]

@@ -3,8 +3,8 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 pub struct Articles {
     pub pagination: Pagination,
-    pub articles: Option<Vec<Article>>,
-    pub topics: Option<Vec<Topic>>,
+    pub articles: Option<Box<[Article]>>,
+    pub topics: Option<Box<[Topic]>>,
     pub section: Option<SectionDescription>,
 }
 
@@ -20,8 +20,8 @@ pub struct Article {
     pub title: String,
     pub canonical_url: String,
     pub description: String,
-    pub content_elements: Option<Vec<serde_json::Value>>,
-    pub authors: Option<Vec<Topic>>,
+    pub content_elements: Option<Box<[serde_json::Value]>>,
+    pub authors: Option<Box<[Topic]>>,
     pub published_time: String,
     pub thumbnail: Option<Thumbnail>,
 }

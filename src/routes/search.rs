@@ -118,7 +118,7 @@ fn render_articles(
             }
             @if let Some(articles) = articles.articles {
                 ul {
-                    @for article in articles {
+                    @for article in articles.iter() {
                         li { a href=(&article.canonical_url) { (&article.title) } }
                     }
                 }

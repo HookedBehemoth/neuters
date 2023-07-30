@@ -14,7 +14,7 @@ pub fn render_market(client: &ureq::Agent, path: &str) -> ApiResult<String> {
         maud::html! {
             company
             ul {
-                @for article in articles.articles {
+                @for article in articles.articles.iter() {
                     li { a href=(&article.canonical_url) { (&article.title) } }
                 }
             }

@@ -67,7 +67,7 @@ pub fn render_legacy_article(
                 }
                 (PreEscaped(byline))
             }
-            @for content in &article.body_items {
+            @for content in article.body_items.iter() {
                 @match content.r#type.as_str() {
                     "paragraph" => {
                         p {

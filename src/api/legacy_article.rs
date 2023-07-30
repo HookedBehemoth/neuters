@@ -22,7 +22,7 @@ pub struct LegacyArticleInitialState {
 
 #[derive(Deserialize)]
 pub struct LegacyArticleArticle {
-    pub stream: Vec<LegacyArticleStream>,
+    pub stream: Box<[LegacyArticleStream]>,
 }
 
 #[derive(Deserialize)]
@@ -31,8 +31,8 @@ pub struct LegacyArticleStream {
     pub headline: String,
     pub description: String,
     pub date: LegacyArticleDate,
-    pub authors: Vec<LegacyArticleAuthor>,
-    pub body_items: Vec<LegacyArticleBodyItem>,
+    pub authors: Box<[LegacyArticleAuthor]>,
+    pub body_items: Box<[LegacyArticleBodyItem]>,
 }
 
 #[derive(Deserialize)]

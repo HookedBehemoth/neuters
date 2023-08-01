@@ -27,5 +27,9 @@ pub fn render_byline(authors: &[Topic]) -> String {
 }
 
 pub fn format_author(author: &Topic) -> String {
-    format!("<a href=\"{}\">{}</a>", author.topic_url, author.byline)
+    if let Some(url) = &author.topic_url {
+        format!("<a href=\"{}\">{}</a>", url, author.byline)
+    } else {
+        author.byline.clone()
+    }
 }

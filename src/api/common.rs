@@ -53,6 +53,6 @@ pub struct SectionDescription {
 #[derive(Deserialize)]
 pub struct Topic {
     pub name: String,
-    pub topic_url: String,
+    pub topic_url: Option<String>,
     pub byline: String,
 }

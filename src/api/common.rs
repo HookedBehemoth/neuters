@@ -23,18 +23,12 @@ pub struct Article {
     pub content_elements: Option<Box<[serde_json::Value]>>,
     pub authors: Option<Box<[Topic]>>,
     pub published_time: String,
-    pub thumbnail: Option<Thumbnail>,
 }
 
 #[derive(Deserialize)]
 pub struct Section {
     pub path: String,
     pub name: String,
-}
-
-#[derive(Deserialize)]
-pub struct Thumbnail {
-    pub url: String,
 }
 
 #[derive(Deserialize)]

@@ -1,7 +1,7 @@
 # Build Stage
 FROM rust:alpine as builder
 
-RUN apk add --no-cache musl-dev
+RUN apk add --no-cache musl-dev git
 
 WORKDIR /build 
 COPY . .

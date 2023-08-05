@@ -1,6 +1,9 @@
 use crate::api::error::ApiResult;
 use crate::document;
 use maud::html;
+use std::env;
+
+const GIT_HASH: &str = env!("GIT_HASH");
 
 pub fn render_about() -> ApiResult<String> {
     let doc = document!(
@@ -15,8 +18,8 @@ pub fn render_about() -> ApiResult<String> {
                 li { "Lightweight (usually <10KiB vs 50MiB from Reuters)" }
                 li { "Dynamic Theming (respects system theme)" }
             }
-            p { "You can install " a href="https://addons.mozilla.org/en-US/firefox/addon/reuters-redirect/" { "this browser extension" } " to automatically forwards all reuters links to this site." }
-            p { "This is a work in progress. Please report any bugs or suggestions at " a href="https://github.com/HookedBehemoth/supreme-waffle" { "GitHub" } "." }
+            p { "You can install " a href="https://libredirect.github.io/" { "libredirect" } " or " a href="https://addons.mozilla.org/en-US/firefox/addon/reuters-redirect/" { "this browser extension" } " to automatically forwards all reuters links to this site." }
+            p { "This is a work in progress. Please report any bugs or suggestions at " a href="https://github.com/HookedBehemoth/neuters" { "GitHub" } "." }
 
             h2 { "Contact" }
             p { "If you have any questions, feel free to contact me at " a href = "mailto:admin@boxcat.site" { "admin@boxcat.site" } "." }
@@ -28,6 +31,9 @@ pub fn render_about() -> ApiResult<String> {
 
             h2 { "License" }
             p { "This project is licensed under the " a href="https://www.gnu.org/licenses/licenses.html#AGPL" { "GNU Affero General Public License" } "." }
+
+            h2 { "Build information" }
+            p { "This version is based off the git commit " a href=(format!("https://github.com/HookedBehemoth/neuters/commit/{}", GIT_HASH)) { (GIT_HASH) }}
         },
     );
 

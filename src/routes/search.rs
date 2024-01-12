@@ -3,7 +3,7 @@ use crate::api::{
     section::fetch_articles_by_section, topic::fetch_articles_by_topic,
 };
 use crate::document;
-use hypertext::{html_elements, maud, GlobalAttributes, maud_static};
+use hypertext::{html_elements, maud, GlobalAttributes, Renderable};
 
 #[derive(PartialEq)]
 enum SearchType {
@@ -45,13 +45,13 @@ pub fn render_search(client: &ureq::Agent, request: &rouille::Request) -> ApiRes
         _ => {
             let doc = document!(
                 "Neuters - Reuters Proxy - Search",
-                maud_static! {
+                maud! {
                     h1 { "Search:" }
                     form {
                         input type="text" name="query" placeholder="Keywords..." required="";
                         button type="submit" { "Search" }
                     }
-                }.as_str(),
+                },
             );
 
             Ok(doc.render().0)
@@ -119,7 +119,7 @@ fn render_articles(
             @if let Some(articles) = &articles.articles {
                 ul {
                     @for article in articles.iter() {
-                        li { a href=(article.canonical_url.as_str()) { (article.title.as_str()) } }
+                        li { a href=(&article.canonical_url) { (&article.title) } }
                     }
                 }
                 @if total != 0 {

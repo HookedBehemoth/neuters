@@ -1,6 +1,6 @@
 use crate::api::error::ApiResult;
 use crate::document;
-use hypertext::{html_elements, maud, GlobalAttributes};
+use hypertext::{html_elements, maud, GlobalAttributes, Renderable};
 use std::env;
 const GIT_HASH: &str = env!("GIT_HASH");
 
@@ -36,5 +36,5 @@ pub fn render_about() -> ApiResult<String> {
         },
     );
 
-    Ok(doc.render().0)
+    Ok(doc.render().into_inner())
 }

@@ -1,16 +1,10 @@
 use crate::{
     api::{article::fetch_article_by_url, error::ApiResult},
     render::byline,
+    routes::HtmxAttributes,
 };
 use chrono::{DateTime, Utc};
-use hypertext::{html_elements, maud, GlobalAttributes, Rendered, Raw, Attribute};
-
-trait HtmxAttributes: GlobalAttributes {
-    #[allow(non_upper_case_globals)]
-    const property: Attribute = Attribute;
-}
-
-impl<T: GlobalAttributes> HtmxAttributes for T {}
+use hypertext::{html_elements, maud, maud_move, GlobalAttributes, Raw, Renderable};
 
 pub fn render_article(client: &ureq::Agent, path: &str) -> ApiResult<String> {
     let article = fetch_article_by_url(client, path)?;
@@ -21,35 +15,34 @@ pub fn render_article(client: &ureq::Agent, path: &str) -> ApiResult<String> {
         .map(|time| time.format("%Y-%m-%d %H:%M").to_string());
 
     let doc = crate::document!(
-        article.title.as_str(),
+        &article.title,
         maud!(
-            h1 { (article.title.as_str()) }
+            h1 { (&article.title) }
             p class="byline" {
                 @if let Some(authors) = &article.authors {
-                    @let byline = byline::render_byline(authors);
                     @if let Ok(time) = &published_time {
-                        (time.as_str()) " - "
+                        (time) " - "
                     }
-                    (Raw(byline))
+                    (byline::render_byline(authors))
                 }
             }
             @if let Some(articles) = &article.content_elements {
-                (Raw(render_items(articles)))
+                (render_items(articles))
             }
         ),
         maud! {
-            meta property="og:title" content=(article.title.as_str());
+            meta property="og:title" content=(&article.title);
             meta property="og:type" content="article";
-            meta property="og:description" content=(article.description.as_str());
+            meta property="og:description" content=(&article.description);
             meta property="og:url" content=(path);
         }
     );
 
-    Ok(doc.render().0)
+    Ok(doc.render().into_inner())
 }
 
-fn render_items(items: &[serde_json::Value]) -> Rendered<String> {
-    maud! {
+fn render_items(items: &[serde_json::Value]) -> impl Renderable + '_ {
+    maud_move! {
         @for content in items {
             @match content["type"].as_str() {
                 Some("header") => {
@@ -112,7 +105,7 @@ fn render_items(items: &[serde_json::Value]) -> Rendered<String> {
                 }
                 Some("list") => {
                     @if let Some(items) = content["items"].as_array() {
-                        (Raw(render_items(items)))
+                        (render_items(items))
                     }
                 }
                 Some("social_media") => {
@@ -129,5 +122,5 @@ fn render_items(items: &[serde_json::Value]) -> Rendered<String> {
                 None => { p { "Failed to parse content element" } }
             }
         }
-    }.render()
+    }
 }

@@ -32,7 +32,7 @@ pub fn render_about() -> ApiResult<String> {
             p { "This project is licensed under the " a href="https://www.gnu.org/licenses/licenses.html#AGPL" { "GNU Affero General Public License" } "." }
 
             h2 { "Build information" }
-            p { "This version is based off the git commit " a href=(format!("https://github.com/HookedBehemoth/neuters/commit/{}", GIT_HASH)) { (GIT_HASH) }}
+            p { "This version is based off the git commit " a href={ "https://github.com/HookedBehemoth/neuters/commit/" (GIT_HASH) } { (GIT_HASH) }}
         },
     );
 

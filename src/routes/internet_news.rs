@@ -62,8 +62,8 @@ pub fn render_legacy_article(
         .parse::<DateTime<Utc>>()
         .map(|time| time.format("%Y-%m-%d %H:%M").to_string());
 
-    let doc = crate::document(
-        &article.headline,
+    let doc = crate::document!(
+        article.headline.as_str(),
         maud! {
             h1 { (article.headline.as_str()) }
             p class="byline" {
@@ -87,14 +87,14 @@ pub fn render_legacy_article(
                     }
                 }
             }
-        }.render().as_str(),
-        Some(maud! {
+        },
+        maud! {
             meta property="og:title" content=(article.headline.as_str());
             meta property="og:type" content="article";
             meta property="og:description" content=(article.description.as_str());
             meta property="og:url" content=(path);
-        }.render().as_str())
+        }
     );
 
-    Ok(Ok(doc.into_string()))
+    Ok(Ok(doc.render().0))
 }

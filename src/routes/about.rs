@@ -1,11 +1,11 @@
 use crate::api::error::ApiResult;
 use crate::document;
-use hypertext::{html_elements, maud};
+use hypertext::{html_elements, maud, GlobalAttributes};
 use std::env;
 const GIT_HASH: &str = env!("GIT_HASH");
 
 pub fn render_about() -> ApiResult<String> {
-    let doc = document(
+    let doc = document!(
         "About",
         maud! {
             h1 { "About" }
@@ -33,9 +33,8 @@ pub fn render_about() -> ApiResult<String> {
 
             h2 { "Build information" }
             p { "This version is based off the git commit " a href=(format!("https://github.com/HookedBehemoth/neuters/commit/{}", GIT_HASH)) { (GIT_HASH) }}
-        }.render().as_str(),
-        None
+        },
     );
 
-    Ok(doc.into_string())
+    Ok(doc.render().0)
 }

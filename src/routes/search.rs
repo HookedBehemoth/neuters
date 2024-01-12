@@ -43,7 +43,7 @@ pub fn render_search(client: &ureq::Agent, request: &rouille::Request) -> ApiRes
             render_articles(articles, &query, offset, size, SearchType::Query)
         }
         _ => {
-            let doc = document(
+            let doc = document!(
                 "Neuters - Reuters Proxy - Search",
                 maud_static! {
                     h1 { "Search:" }
@@ -52,10 +52,9 @@ pub fn render_search(client: &ureq::Agent, request: &rouille::Request) -> ApiRes
                         button type="submit" { "Search" }
                     }
                 }.as_str(),
-                None
             );
 
-            Ok(doc.into_string())
+            Ok(doc.render().0)
         }
     }
 }
@@ -109,7 +108,7 @@ fn render_articles(
     };
     let next_page = next_page.as_ref().map(|p| p.as_str());
 
-    let doc = document(
+    let doc = document!(
         "Neuters - Reuters Proxy",
         maud! {
             h1 { (title) }
@@ -135,9 +134,8 @@ fn render_articles(
             } @else {
                 p { "No results found!" }
             }
-        }.render().as_str(),
-        None
+        },
     );
 
-    Ok(doc.into_string())
+    Ok(doc.render().0)
 }

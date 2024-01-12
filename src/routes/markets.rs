@@ -10,7 +10,7 @@ pub fn render_market(client: &ureq::Agent, path: &str) -> ApiResult<String> {
 
     let articles = fetch_by_stock_symbol(client, company)?;
 
-    let document = crate::document(
+    let document = crate::document!(
         company,
         maud! {
             (company)
@@ -19,8 +19,7 @@ pub fn render_market(client: &ureq::Agent, path: &str) -> ApiResult<String> {
                     li { a href=(article.canonical_url.as_str()) { (article.title.as_str()) } }
                 }
             }
-        }.render().as_str(),
-        None
+        },
     );
-    Ok(document.into_string())
+    Ok(document.render().0)
 }

@@ -19,8 +19,8 @@ pub fn render_article(client: &ureq::Agent, path: &str) -> ApiResult<String> {
         .parse::<DateTime<Utc>>()
         .map(|time| time.format("%Y-%m-%d %H:%M").to_string());
 
-    let doc = crate::document(
-        &article.title,
+    let doc = crate::document!(
+        article.title.as_str(),
         maud!(
             h1 { (article.title.as_str()) }
             p class="byline" {
@@ -35,16 +35,16 @@ pub fn render_article(client: &ureq::Agent, path: &str) -> ApiResult<String> {
             @if let Some(articles) = &article.content_elements {
                 (Raw(render_items(&articles)))
             }
-        ).render().as_str(),
-        Some(maud! {
+        ),
+        maud! {
             meta property="og:title" content=(article.title.as_str());
             meta property="og:type" content="article";
             meta property="og:description" content=(article.description.as_str());
             meta property="og:url" content=(path);
-        }.render().as_str())
+        }
     );
 
-    Ok(doc.into_string())
+    Ok(doc.render().0)
 }
 
 fn render_items(items: &[serde_json::Value]) -> Rendered<String> {

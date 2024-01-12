@@ -6,6 +6,7 @@ use chrono::{DateTime, Utc};
 use hypertext::{html_elements, maud, GlobalAttributes, Rendered, Raw, Attribute};
 
 trait HtmxAttributes: GlobalAttributes {
+    #[allow(non_upper_case_globals)]
     const property: Attribute = Attribute;
 }
 
@@ -33,7 +34,7 @@ pub fn render_article(client: &ureq::Agent, path: &str) -> ApiResult<String> {
                 }
             }
             @if let Some(articles) = &article.content_elements {
-                (Raw(render_items(&articles)))
+                (Raw(render_items(articles)))
             }
         ),
         maud! {

@@ -10,11 +10,10 @@ use routes::{
     markets::render_market,
     search::{render_search, render_section, render_topic},
 };
-use hypertext::{html_elements, maud, GlobalAttributes, Rendered, Raw, Render};
+use hypertext::{html_elements, maud, GlobalAttributes};
 
 const CSS: &str = include_str!(concat!(env!("OUT_DIR"), "/main.css"));
 
-// pub fn document(title: &str, content: &Render<impl Fn(&mut String)>, head: Option<&Render<impl Fn(&mut String)>>) -> Rendered<String> {
 macro_rules! document {
     ($title:expr, $content:expr, $( $head:expr )? ) => {
         maud! {

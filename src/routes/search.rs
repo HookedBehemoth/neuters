@@ -79,7 +79,7 @@ fn render_articles(
             articles
                 .topics
                 .as_ref()
-                .and_then(|t| t.get(0).map(|t| t.name.as_str()))
+                .and_then(|t| t.first().map(|t| t.name.as_str()))
                 .unwrap_or(""),
             format!("{path}?"),
         ),
@@ -99,14 +99,12 @@ fn render_articles(
     } else {
         None
     };
-    let prev_page = prev_page.as_ref().map(|p| p.as_str());
     let next_page = if has_next {
         let offset = offset.saturating_add(steps).min(total - 1);
         Some(format!("{url}steps={steps}&offset={offset}"))
     } else {
         None
     };
-    let next_page = next_page.as_ref().map(|p| p.as_str());
 
     let doc = document!(
         "Neuters - Reuters Proxy",
@@ -126,9 +124,9 @@ fn render_articles(
                 }
                 @if total != 0 {
                     div.nav {
-                        a href=[prev_page] { "<" }
+                        a href=[prev_page.as_deref()] { "<" }
                         (offset + 1) " to " (offset + count) " of " (total)
-                        a href=[next_page] { ">" }
+                        a href=[next_page.as_deref()] { ">" }
                     }
                 }
             } @else {

@@ -10,6 +10,7 @@ use crate::{
 };
 
 trait HtmxAttributes: GlobalAttributes {
+    #[allow(non_upper_case_globals)]
     const property: Attribute = Attribute;
 }
 

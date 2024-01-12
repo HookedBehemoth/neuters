@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use maud::{html, PreEscaped};
+use hypertext::{html_elements, maud, GlobalAttributes, Attribute, Raw};
 
 use crate::{
     api::{
@@ -8,6 +8,12 @@ use crate::{
     },
     render::legacy_article_byline::render_byline,
 };
+
+trait HtmxAttributes: GlobalAttributes {
+    const property: Attribute = Attribute;
+}
+
+impl<T: GlobalAttributes> HtmxAttributes for T {}
 
 pub fn render_legacy_article(
     client: &ureq::Agent,
@@ -56,22 +62,22 @@ pub fn render_legacy_article(
         .parse::<DateTime<Utc>>()
         .map(|time| time.format("%Y-%m-%d %H:%M").to_string());
 
-    let doc = crate::document!(
+    let doc = crate::document(
         &article.headline,
-        html! {
-            h1 { (&article.headline) }
+        maud! {
+            h1 { (article.headline.as_str()) }
             p class="byline" {
                 @let byline = render_byline(&article.authors);
-                @if let Ok(time) = published_time {
-                    (time) " - "
+                @if let Ok(time) = &published_time {
+                    (time.as_str()) " - "
                 }
-                (PreEscaped(byline))
+                (Raw(byline))
             }
             @for content in article.body_items.iter() {
                 @match content.r#type.as_str() {
                     "paragraph" => {
                         p {
-                            (content.content)
+                            (content.content.as_str())
                         }
                     }
                     t => {
@@ -81,13 +87,13 @@ pub fn render_legacy_article(
                     }
                 }
             }
-        },
-        html! {
-            meta property="og:title" content=(&article.headline);
+        }.render().as_str(),
+        Some(maud! {
+            meta property="og:title" content=(article.headline.as_str());
             meta property="og:type" content="article";
-            meta property="og:description" content=(&article.description);
+            meta property="og:description" content=(article.description.as_str());
             meta property="og:url" content=(path);
-        }
+        }.render().as_str())
     );
 
     Ok(Ok(doc.into_string()))

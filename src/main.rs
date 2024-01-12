@@ -10,34 +10,34 @@ use routes::{
     markets::render_market,
     search::{render_search, render_section, render_topic},
 };
+use hypertext::{html_elements, maud, GlobalAttributes, Rendered, Raw};
 
 const CSS: &str = include_str!(concat!(env!("OUT_DIR"), "/main.css"));
 
-macro_rules! document {
-    ($title:expr, $content:expr, $( $head:expr )? ) => {
-        maud::html! {
-            (maud::DOCTYPE)
-            html lang="en" {
-                head {
-                    title { ($title) }
-                    link rel="stylesheet" href="/main.css?v=0";
-                    meta name="viewport" content="width=device-width, initial-scale=1";
-                    $( ($head) )?
-                }
-                body {
-                    main { ($content) }
-                    footer { div {
-                        a href="/" { "Home" }
-                        " - "
-                        a href="/search" { "Search" }
-                        " - "
-                        a href="/about" { "About" } } }
+pub fn document(title: &str, content: &str, head: Option<&str>) -> Rendered<String> {
+    maud! {
+        !DOCTYPE
+        html lang="en" {
+            head {
+                title { (title) }
+                link rel="stylesheet" href="/main.css?v=0";
+                meta name="viewport" content="width=device-width, initial-scale=1";
+                @if let Some(head) = head {
+                    (Raw(head))
                 }
             }
+            body {
+                main { (Raw(content)) }
+                footer { div {
+                    a href="/" { "Home" }
+                    " - "
+                    a href="/search" { "Search" }
+                    " - "
+                    a href="/about" { "About" } } }
+            }
         }
-    };
+    }.render()
 }
-pub(crate) use document;
 
 fn main() {
     let mut pargs = pico_args::Arguments::from_env();
@@ -147,14 +147,15 @@ fn main() {
 fn render_error(code: u16, message: &str, path: &str) -> rouille::Response {
     let title = format!("{} - {}", code, message);
 
-    let doc = document!(
+    let doc = document(
         &title,
-        maud::html! {
-            h1 { (&title) }
+        maud! {
+            h1 { (title.as_str()) }
             p { "You tried to access \"" (path) "\"" }
             p { a href="/" { "Go home" } }
             p { a href=(path) { "Try again" } }
-        },
+        }.render().as_str(),
+        None
     );
 
     rouille::Response::html(doc.into_string()).with_status_code(code)

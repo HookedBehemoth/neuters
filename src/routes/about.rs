@@ -1,14 +1,13 @@
 use crate::api::error::ApiResult;
 use crate::document;
-use maud::html;
+use hypertext::{html_elements, maud};
 use std::env;
-
 const GIT_HASH: &str = env!("GIT_HASH");
 
 pub fn render_about() -> ApiResult<String> {
-    let doc = document!(
+    let doc = document(
         "About",
-        html! {
+        maud! {
             h1 { "About" }
             p { "This is an alternative frontend to " a href="https://www.reuters.com/" { "Reuters" } ". It is intented to be lightweight, fast and was heavily inspired by " a href="https://nitter.net/" { "Nitter" } "." }
             ul {
@@ -34,7 +33,8 @@ pub fn render_about() -> ApiResult<String> {
 
             h2 { "Build information" }
             p { "This version is based off the git commit " a href=(format!("https://github.com/HookedBehemoth/neuters/commit/{}", GIT_HASH)) { (GIT_HASH) }}
-        },
+        }.render().as_str(),
+        None
     );
 
     Ok(doc.into_string())

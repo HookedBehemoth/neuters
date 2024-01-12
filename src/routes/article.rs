@@ -3,7 +3,13 @@ use crate::{
     render::byline,
 };
 use chrono::{DateTime, Utc};
-use maud::{html, PreEscaped};
+use hypertext::{html_elements, maud, GlobalAttributes, Rendered, Raw, Attribute};
+
+trait HtmxAttributes: GlobalAttributes {
+    const property: Attribute = Attribute;
+}
+
+impl<T: GlobalAttributes> HtmxAttributes for T {}
 
 pub fn render_article(client: &ureq::Agent, path: &str) -> ApiResult<String> {
     let article = fetch_article_by_url(client, path)?;
@@ -13,34 +19,36 @@ pub fn render_article(client: &ureq::Agent, path: &str) -> ApiResult<String> {
         .parse::<DateTime<Utc>>()
         .map(|time| time.format("%Y-%m-%d %H:%M").to_string());
 
-    let doc = crate::document!(
+    let doc = crate::document(
         &article.title,
-        html!(
-            h1 { (&article.title) }
+        maud!(
+            h1 { (article.title.as_str()) }
             p class="byline" {
                 @if let Some(authors) = &article.authors {
                     @let byline = byline::render_byline(authors);
-                    @if let Ok(time) = published_time {
-                        (time) " - "
+                    @if let Ok(time) = &published_time {
+                        (time.as_str()) " - "
                     }
-                    (PreEscaped(byline))
+                    (Raw(byline))
                 }
             }
-            (render_items(&article.content_elements.unwrap_or_default()))
-        ),
-        html! {
-            meta property="og:title" content=(&article.title);
+            @if let Some(articles) = &article.content_elements {
+                (Raw(render_items(&articles)))
+            }
+        ).render().as_str(),
+        Some(maud! {
+            meta property="og:title" content=(article.title.as_str());
             meta property="og:type" content="article";
-            meta property="og:description" content=(&article.description);
+            meta property="og:description" content=(article.description.as_str());
             meta property="og:url" content=(path);
-        }
+        }.render().as_str())
     );
 
     Ok(doc.into_string())
 }
 
-fn render_items(items: &[serde_json::Value]) -> maud::Markup {
-    html! {
+fn render_items(items: &[serde_json::Value]) -> Rendered<String> {
+    maud! {
         @for content in items {
             @match content["type"].as_str() {
                 Some("header") => {
@@ -54,7 +62,7 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                 }
                 Some("paragraph") => {
                     @if let Some(content) = content["content"].as_str() {
-                        p { (PreEscaped(&content)) }
+                        p { (Raw(&content)) }
                     }
                 }
                 Some("image") => {
@@ -94,7 +102,7 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                                 tr {
                                     @let cells = match row.as_array() { Some(cells) => cells, None => continue };
                                     @for cell in cells {
-                                        td { (PreEscaped(cell.as_str().unwrap_or_default())) }
+                                        td { (Raw(cell.as_str().unwrap_or_default())) }
                                     }
                                 }
                             }
@@ -103,7 +111,7 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                 }
                 Some("list") => {
                     @if let Some(items) = content["items"].as_array() {
-                        (render_items(items))
+                        (Raw(render_items(items)))
                     }
                 }
                 Some("social_media") => {
@@ -113,12 +121,12 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                         } else {
                             markup
                         };
-                       (maud::PreEscaped(embed))
+                       (Raw(embed))
                     }
                 }
                 Some(unknown) => { p { "Unknown type: " (unknown) } }
                 None => { p { "Failed to parse content element" } }
             }
         }
-    }
+    }.render()
 }

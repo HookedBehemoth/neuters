@@ -3,7 +3,7 @@ use crate::api::{
     section::fetch_articles_by_section, topic::fetch_articles_by_topic,
 };
 use crate::document;
-use maud::html;
+use hypertext::{html_elements, maud, GlobalAttributes, maud_static};
 
 #[derive(PartialEq)]
 enum SearchType {
@@ -43,15 +43,16 @@ pub fn render_search(client: &ureq::Agent, request: &rouille::Request) -> ApiRes
             render_articles(articles, &query, offset, size, SearchType::Query)
         }
         _ => {
-            let doc = document!(
+            let doc = document(
                 "Neuters - Reuters Proxy - Search",
-                html! {
+                maud_static! {
                     h1 { "Search:" }
                     form {
                         input type="text" name="query" placeholder="Keywords..." required="";
                         button type="submit" { "Search" }
                     }
-                },
+                }.as_str(),
+                None
             );
 
             Ok(doc.into_string())
@@ -99,16 +100,18 @@ fn render_articles(
     } else {
         None
     };
+    let prev_page = prev_page.as_ref().map(|p| p.as_str());
     let next_page = if has_next {
         let offset = offset.saturating_add(steps).min(total - 1);
         Some(format!("{url}steps={steps}&offset={offset}"))
     } else {
         None
     };
+    let next_page = next_page.as_ref().map(|p| p.as_str());
 
-    let doc = document!(
+    let doc = document(
         "Neuters - Reuters Proxy",
-        html! {
+        maud! {
             h1 { (title) }
             @if search_type == SearchType::Query {
                 form {
@@ -116,23 +119,24 @@ fn render_articles(
                     button type="submit" { "Search" }
                 }
             }
-            @if let Some(articles) = articles.articles {
+            @if let Some(articles) = &articles.articles {
                 ul {
                     @for article in articles.iter() {
-                        li { a href=(&article.canonical_url) { (&article.title) } }
+                        li { a href=(article.canonical_url.as_str()) { (article.title.as_str()) } }
                     }
                 }
                 @if total != 0 {
                     div.nav {
                         a href=[prev_page] { "<" }
-                        ((offset + 1)) " to " ((offset + count)) " of " (total)
+                        (offset + 1) " to " (offset + count) " of " (total)
                         a href=[next_page] { ">" }
                     }
                 }
             } @else {
                 p { "No results found!" }
             }
-        },
+        }.render().as_str(),
+        None
     );
 
     Ok(doc.into_string())

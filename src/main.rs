@@ -3,6 +3,7 @@ mod render;
 mod routes;
 
 use api::error::ApiError;
+use hypertext::{html_elements, maud, GlobalAttributes, Renderable};
 use routes::{
     about::render_about,
     article::render_article,
@@ -10,7 +11,6 @@ use routes::{
     markets::render_market,
     search::{render_search, render_section, render_topic},
 };
-use hypertext::{html_elements, maud, GlobalAttributes};
 
 const CSS: &str = include_str!(concat!(env!("OUT_DIR"), "/main.css"));
 
@@ -147,12 +147,12 @@ fn main() {
 }
 
 fn render_error(code: u16, message: &str, path: &str) -> rouille::Response {
-    let title = format!("{} - {}", code, message);
+    let title = maud!((code) " - " (message));
 
     let doc = document!(
-        title.as_str(),
-        &maud! {
-            h1 { (title.as_str()) }
+        title,
+        maud! {
+            h1 { (title) }
             p { "You tried to access \"" (path) "\"" }
             p { a href="/" { "Go home" } }
             p { a href=(path) { "Try again" } }

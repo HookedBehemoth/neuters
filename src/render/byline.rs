@@ -1,35 +1,34 @@
+use hypertext::{maud, Renderable};
+
 use crate::api::common::Topic;
-use std::fmt::Write;
+use hypertext::html_elements;
 
-pub fn render_byline(authors: &[Topic]) -> String {
-    match authors.len() {
-        0 => "".to_string(),
-        1 => format_author(&authors[0]),
-        author_count => {
-            /* Chain author names together */
-            let mut byline = "By ".to_string();
-
-            for author in authors[..author_count - 2].iter() {
-                byline.push_str(&format_author(author));
-                byline.push_str(", ");
+pub fn render_byline(authors: &[Topic]) -> impl Renderable + '_ {
+    maud! {
+        @match authors.len() {
+            0 => {},
+            1 => (format_author(&authors[0])),
+            author_count => {
+                "By "
+                @for author in &authors[..author_count - 2] {
+                    (format_author(author)) ", "
+                }
+                (format_author(&authors[author_count - 2]))
+                " and "
+                (format_author(&authors[author_count - 1]))
             }
-
-            let _ = write!(
-                byline,
-                "{} and {}",
-                format_author(&authors[author_count - 2]),
-                format_author(&authors[author_count - 1])
-            );
-
-            byline
         }
     }
 }
 
-pub fn format_author(author: &Topic) -> String {
-    if let Some(url) = &author.topic_url {
-        format!("<a href=\"{}\">{}</a>", url, author.byline)
-    } else {
-        author.byline.clone()
+pub fn format_author(author: &Topic) -> impl Renderable + '_ {
+    maud! {
+        @if let Some(url) = &author.topic_url {
+            a href=(url) {
+                (&author.byline)
+            }
+        } @else {
+            (&author.byline)
+        }
     }
 }

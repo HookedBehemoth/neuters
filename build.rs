@@ -6,7 +6,7 @@ use std::process::Command;
 
 fn main() {
     let output = Command::new("git")
-        .args(&["rev-parse", "HEAD"])
+        .args(["rev-parse", "HEAD"])
         .output()
         .unwrap();
     let git_hash = String::from_utf8(output.stdout).unwrap();
@@ -30,5 +30,5 @@ fn main() {
 
     let css = grass::from_path(src, &options).unwrap();
     let dst = out_dir.join(dst);
-    fs::write(dst, &css).unwrap();
+    fs::write(dst, css).unwrap();
 }

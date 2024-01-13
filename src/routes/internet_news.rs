@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use maud::{html, PreEscaped};
+use hypertext::{html_elements, maud, GlobalAttributes, Renderable};
 
 use crate::{
     api::{
@@ -7,6 +7,7 @@ use crate::{
         legacy_article::{fetch_legacy_article, parse_legacy_article},
     },
     render::legacy_article_byline::render_byline,
+    routes::HtmxAttributes,
 };
 
 pub fn render_legacy_article(
@@ -58,20 +59,19 @@ pub fn render_legacy_article(
 
     let doc = crate::document!(
         &article.headline,
-        html! {
+        maud! {
             h1 { (&article.headline) }
             p class="byline" {
-                @let byline = render_byline(&article.authors);
-                @if let Ok(time) = published_time {
+                @if let Ok(time) = &published_time {
                     (time) " - "
                 }
-                (PreEscaped(byline))
+                (render_byline(&article.authors))
             }
             @for content in article.body_items.iter() {
                 @match content.r#type.as_str() {
                     "paragraph" => {
                         p {
-                            (content.content)
+                            (&content.content)
                         }
                     }
                     t => {
@@ -82,7 +82,7 @@ pub fn render_legacy_article(
                 }
             }
         },
-        html! {
+        maud! {
             meta property="og:title" content=(&article.headline);
             meta property="og:type" content="article";
             meta property="og:description" content=(&article.description);
@@ -90,5 +90,5 @@ pub fn render_legacy_article(
         }
     );
 
-    Ok(Ok(doc.into_string()))
+    Ok(Ok(doc.render().into_inner()))
 }

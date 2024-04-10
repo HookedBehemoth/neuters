@@ -11,7 +11,7 @@ pub struct Articles {
 #[derive(Deserialize)]
 pub struct Pagination {
     pub size: u32,
-    pub total_size: u32,
+    pub total_size: Option<u32>,
     pub orderby: String,
 }
 

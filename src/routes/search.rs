@@ -91,7 +91,7 @@ fn render_articles(
         .as_ref()
         .map(|a| a.len() as u32)
         .unwrap_or(0);
-    let total = articles.pagination.total_size;
+    let total = articles.pagination.total_size.unwrap_or(0);
     let (has_prev, has_next) = (offset > 0, offset + count < total);
     let prev_page = if has_prev {
         let offset = offset.saturating_sub(steps);
@@ -122,7 +122,7 @@ fn render_articles(
                         li { a href=(&article.canonical_url) { (&article.title) } }
                     }
                 }
-                @if total != 0 {
+                @if has_prev || has_next {
                     div.nav {
                         a href=[prev_page] { "<" }
                         ((offset + 1)) " to " ((offset + count)) " of " (total)

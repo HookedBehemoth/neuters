@@ -101,7 +101,7 @@ fn main() {
     rouille::start_server(list_address, move |request| {
         let path = request.url();
         let response = match path.as_str() {
-            "/" | "/home" => render_section(&client, "/home", 0, 8),
+            "/" | "/home" => render_section(&client, "/world/", 0, 8),
             "/about" => render_about(),
             "/search" | "/search/" => render_search(&client, request),
             "/main.css" => {

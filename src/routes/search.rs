@@ -3,7 +3,7 @@ use crate::api::{
     section::fetch_articles_by_section, topic::fetch_articles_by_topic,
 };
 use crate::document;
-use maud::html;
+use hypertext::{html_elements, maud, GlobalAttributes, Renderable};
 
 #[derive(PartialEq)]
 enum SearchType {
@@ -45,7 +45,7 @@ pub fn render_search(client: &ureq::Agent, request: &rouille::Request) -> ApiRes
         _ => {
             let doc = document!(
                 "Neuters - Reuters Proxy - Search",
-                html! {
+                maud! {
                     h1 { "Search:" }
                     form {
                         input type="text" name="query" placeholder="Keywords..." required="";
@@ -54,7 +54,7 @@ pub fn render_search(client: &ureq::Agent, request: &rouille::Request) -> ApiRes
                 },
             );
 
-            Ok(doc.into_string())
+            Ok(doc.render().0)
         }
     }
 }
@@ -79,7 +79,7 @@ fn render_articles(
             articles
                 .topics
                 .as_ref()
-                .and_then(|t| t.get(0).map(|t| t.name.as_str()))
+                .and_then(|t| t.first().map(|t| t.name.as_str()))
                 .unwrap_or(""),
             format!("{path}?"),
         ),
@@ -108,7 +108,7 @@ fn render_articles(
 
     let doc = document!(
         "Neuters - Reuters Proxy",
-        html! {
+        maud! {
             h1 { (title) }
             @if search_type == SearchType::Query {
                 form {
@@ -116,7 +116,7 @@ fn render_articles(
                     button type="submit" { "Search" }
                 }
             }
-            @if let Some(articles) = articles.articles {
+            @if let Some(articles) = &articles.articles {
                 ul {
                     @for article in articles.iter() {
                         li { a href=(&article.canonical_url) { (&article.title) } }
@@ -124,9 +124,9 @@ fn render_articles(
                 }
                 @if has_prev || has_next {
                     div.nav {
-                        a href=[prev_page] { "<" }
-                        ((offset + 1)) " to " ((offset + count)) " of " (total)
-                        a href=[next_page] { ">" }
+                        a href=[prev_page.as_deref()] { "<" }
+                        (offset + 1) " to " (offset + count) " of " (total)
+                        a href=[next_page.as_deref()] { ">" }
                     }
                 }
             } @else {
@@ -135,5 +135,5 @@ fn render_articles(
         },
     );
 
-    Ok(doc.into_string())
+    Ok(doc.render().0)
 }

@@ -1,13 +1,11 @@
+use axum::extract::{Path, State};
+use maud::Markup;
+use reqwest::Client;
+
 use crate::api::{error::ApiResult, markit::fetch_by_stock_symbol};
 
-pub fn render_market(client: &ureq::Agent, path: &str) -> ApiResult<String> {
-    let company = if let Some(end) = path.find('/') {
-        &path[..end]
-    } else {
-        path
-    };
-
-    let articles = fetch_by_stock_symbol(client, company)?;
+pub async fn render_market(client: State<Client>, Path(company): Path<String>) -> ApiResult<Markup> {
+    let articles = fetch_by_stock_symbol(&client, &company).await?;
 
     let document = crate::document! {
         company,
@@ -21,5 +19,5 @@ pub fn render_market(client: &ureq::Agent, path: &str) -> ApiResult<String> {
         },
 
     };
-    Ok(document.into_string())
+    Ok(document)
 }

@@ -3,7 +3,10 @@ use crate::api::{
     section::fetch_articles_by_section, topic::fetch_articles_by_topic,
 };
 use crate::document;
-use maud::html;
+use axum::extract::{OriginalUri, Path, Query, State};
+use maud::{html, Markup};
+use reqwest::Client;
+use serde::Deserialize;
 
 #[derive(PartialEq)]
 enum SearchType {
@@ -12,50 +15,66 @@ enum SearchType {
     Query,
 }
 
-pub fn render_topic(client: &ureq::Agent, path: &str, offset: u32, size: u32) -> ApiResult<String> {
-    let article = fetch_articles_by_topic(client, path, offset, size)?;
+pub async fn topic(client: State<Client>, path: &str, offset: u32, size: u32) -> ApiResult<Markup> {
+    let article = fetch_articles_by_topic(&client, path, offset, size).await?;
     render_articles(article, path, offset, size, SearchType::Topic)
 }
 
-pub fn render_section(
-    client: &ureq::Agent,
-    path: &str,
-    offset: u32,
-    size: u32,
-) -> ApiResult<String> {
-    let article = fetch_articles_by_section(client, path, offset, size)?;
-    render_articles(article, path, offset, size, SearchType::Section)
+pub async fn section(
+    client: State<Client>,
+    Query(id): Query<&str>,
+    Query(offset): Query<u32>,
+    Query(size): Query<u32>,
+) -> ApiResult<Markup> {
+    let article = fetch_articles_by_section(&client, &id, offset, size).await?;
+    render_articles(article, &id, offset, size, SearchType::Section)
 }
 
-pub fn render_search(client: &ureq::Agent, request: &rouille::Request) -> ApiResult<String> {
-    match request.get_param("query") {
-        Some(query) => {
-            let offset = request
-                .get_param("offset")
-                .map_or(0, |s| s.parse::<u32>().unwrap_or(0));
-            let size = request
-                .get_param("size")
-                .map_or(20, |s| s.parse::<u32>().unwrap_or(20))
-                .clamp(1, 20);
+#[derive(Deserialize)]
+pub struct Paging {
+    pub offset: Option<u32>,
+    pub size: Option<u32>,
+}
 
-            let articles = fetch_articles_by_search(client, &query, offset, size)?;
+pub async fn author(
+    client: State<Client>,
+    Query(paging): Query<Paging>,
+    OriginalUri(uri): OriginalUri) -> ApiResult<Markup> {
+    topic(client, uri.path(), paging.offset.unwrap_or(0), paging.size.unwrap_or(20)).await
+}
 
-            render_articles(articles, &query, offset, size, SearchType::Query)
-        }
-        _ => {
-            let doc = document!(
-                "Neuters - Reuters Proxy - Search",
-                html! {
-                    h1 { "Search:" }
-                    form {
-                        input type="text" name="query" placeholder="Keywords..." required="";
-                        button type="submit" { "Search" }
-                    }
-                },
-            );
+pub async fn home(client: State<Client>) -> ApiResult<Markup> {
+    section(client, Query("/home"), Query(0), Query(8)).await
+}
 
-            Ok(doc.into_string())
-        }
+#[derive(Deserialize)]
+pub struct SearchQuery {
+    query: Option<String>,
+    offset: Option<u32>,
+    size: Option<u32>,
+}
+
+pub async fn search(client: State<Client>, Query(search): Query<SearchQuery>) -> ApiResult<Markup> {
+    if let Some(query) = search.query {
+        let offset = search.offset.unwrap_or(0);
+        let size = search.size.unwrap_or(20);
+
+        let articles = fetch_articles_by_search(&client, &query, offset, size).await?;
+
+        render_articles(articles, &query, offset, size, SearchType::Query)
+    } else {
+        let doc = document!(
+            "Neuters - Reuters Proxy - Search",
+            html! {
+                h1 { "Search:" }
+                form {
+                    input type="text" name="query" placeholder="Keywords..." required="";
+                    button type="submit" { "Search" }
+                }
+            },
+        );
+
+        Ok(doc)
     }
 }
 
@@ -65,7 +84,7 @@ fn render_articles(
     offset: u32,
     steps: u32,
     search_type: SearchType,
-) -> ApiResult<String> {
+) -> ApiResult<Markup> {
     let (title, url) = match search_type {
         SearchType::Section => (
             articles
@@ -135,5 +154,5 @@ fn render_articles(
         },
     );
 
-    Ok(doc.into_string())
+    Ok(doc)
 }

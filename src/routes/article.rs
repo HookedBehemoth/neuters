@@ -2,11 +2,14 @@ use crate::{
     api::{article::fetch_article_by_url, error::ApiResult},
     render::byline,
 };
+use axum::extract::{OriginalUri, State};
 use chrono::{DateTime, Utc};
-use maud::{html, PreEscaped};
+use maud::{html, Markup, PreEscaped};
+use reqwest::Client;
 
-pub fn render_article(client: &ureq::Agent, path: &str) -> ApiResult<String> {
-    let article = fetch_article_by_url(client, path)?;
+pub async fn render_article(client: State<Client>, uri: OriginalUri) -> ApiResult<Markup> {
+    let path = uri.path();
+    let article = fetch_article_by_url(&client, path).await?;
 
     let published_time = article
         .published_time
@@ -36,7 +39,7 @@ pub fn render_article(client: &ureq::Agent, path: &str) -> ApiResult<String> {
         }
     );
 
-    Ok(doc.into_string())
+    Ok(doc)
 }
 
 fn render_items(items: &[serde_json::Value]) -> maud::Markup {

@@ -1,3 +1,5 @@
+use reqwest::Client;
+
 use super::{
     common::{Article, Pagination},
     error::ApiResult,
@@ -18,11 +20,11 @@ pub struct MarketInfo {
     pub about: String,
 }
 
-pub fn fetch_by_stock_symbol(client: &ureq::Agent, symbol: &str) -> ApiResult<StockSearchResult> {
+pub async fn fetch_by_stock_symbol(client: &Client, symbol: &str) -> ApiResult<StockSearchResult> {
     const API_URL: &str =
         "https://www.reuters.com/pf/api/v3/content/fetch/articles-by-stock-symbol-v1";
 
     let query = format!(r#"{{"website":"reuters","symbol":"{symbol}","arc-site":"reuters"}}"#);
 
-    fetch(client, API_URL, &query)
+    fetch(client, API_URL, &query).await
 }

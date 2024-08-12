@@ -1,6 +1,12 @@
 use serde::Deserialize;
 
 #[derive(Deserialize)]
+pub struct Paging {
+    pub offset: u32,
+    pub size: u32,
+}
+
+#[derive(Deserialize)]
 pub struct Articles {
     pub pagination: Pagination,
     pub articles: Option<Box<[Article]>>,

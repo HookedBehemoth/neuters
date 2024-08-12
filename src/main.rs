@@ -3,15 +3,16 @@ mod render;
 mod routes;
 
 use api::error::ApiError;
+use axum::{routing::get, Router};
+use reqwest::redirect::Policy;
 use routes::{
-    about::render_about,
+    about::about,
     article::render_article,
-    internet_news::render_legacy_article,
+    // internet_news::render_legacy_article,
     markets::render_market,
-    search::{render_search, render_section, render_topic},
+    article_list::{search, section, topic, home, author},
+    statics::css,
 };
-
-const CSS: &str = include_str!(concat!(env!("OUT_DIR"), "/main.css"));
 
 macro_rules! document {
     ($title:expr, $content:expr, $( $head:expr )? ) => {
@@ -39,71 +40,48 @@ macro_rules! document {
 }
 pub(crate) use document;
 
-fn main() {
+use crate::routes::statics::empty_not_found;
+
+#[tokio::main]
+async fn main() {
+    env_logger::init();
+    // tracing_subscriber::fmt::init();
+
     let mut pargs = pico_args::Arguments::from_env();
     let list_address: String = pargs
         .value_from_str("--address")
         .unwrap_or_else(|_| "127.0.0.1:13369".into());
 
-    let client: ureq::Agent = {
-        let certs = rustls_native_certs::load_native_certs().expect("Could not load certs!");
-
-        let mut root_store = rustls::RootCertStore::empty();
-        for cert in certs {
-            root_store
-                .add(&rustls::Certificate(cert.0))
-                .expect("Could not add cert!");
-        }
-        let tls_config = std::sync::Arc::new(
-            rustls::ClientConfig::builder()
-                .with_safe_defaults()
-                .with_root_certificates(root_store)
-                .with_no_client_auth(),
-        );
-
-        let mut client_builder = ureq::AgentBuilder::new();
-
-        client_builder = client_builder.tls_config(tls_config).redirects(0);
-
-        #[cfg(debug_assertions)]
-        {
-            println!("Installing middleware");
-
-            struct LoggerMiddleware;
-
-            impl ureq::Middleware for LoggerMiddleware {
-                fn handle(
-                    &self,
-                    request: ureq::Request,
-                    next: ureq::MiddlewareNext,
-                ) -> Result<ureq::Response, ureq::Error> {
-                    print!("{}: {}", request.method(), request.url());
-                    let response = next.handle(request);
-                    println!(
-                        " -> {:?}",
-                        response
-                            .as_ref()
-                            .ok()
-                            .map(|r| (r.status(), r.status_text()))
-                            .unwrap_or((500, "Failed"))
-                    );
-                    response
-                }
-            }
-
-            client_builder = client_builder.middleware(LoggerMiddleware)
-        }
-
-        client_builder.build()
-    };
+    let client = reqwest::ClientBuilder::new()
+        .redirect(Policy::none())
+        .tls_built_in_root_certs(true)
+        .build()
+        .expect("HTTP-Client");
 
     println!("Listening on http://{}", list_address);
+    
+    let routes = Router::new()
+        .route("/", get(home))
+        .route("/home", get(home))
+        .route("/search", get(search))
+        .route("/authors/:author/", get(author))
+        // .route("/article/:name", get(render_legacy_article))
+        .route("/about", get(about))
+        .route("/main.css", get(css))
+        .route("/favicon.ico", get(empty_not_found))
+        .route("/markets/companies/:id", get(render_market))
+        .fallback(get(render_article))
+        .with_state(client);
+
+    let listener = tokio::net::TcpListener::bind(list_address).await.unwrap();
+    axum::serve(listener, routes).await.unwrap();
+    /*
     rouille::start_server(list_address, move |request| {
         let path = request.url();
         let response = match path.as_str() {
-            "/" | "/home" => render_section(&client, "/home", 0, 8),
-            "/about" => render_about(),
-            "/search" | "/search/" => render_search(&client, request),
+            "/" | "/home" => section(&client, "/home", 0, 8),
+            "/about" => get(about),
+            "/search" | "/search/" => search(&client, request),
             "/main.css" => {
                 return rouille::Response {
                     status_code: 200,
@@ -121,7 +99,7 @@ fn main() {
                     let offset = request
                         .get_param("offset")
                         .map_or(0, |s| s.parse::<u32>().unwrap_or(0));
-                    render_topic(&client, &path, offset, 20)
+                    topic(&client, &path, offset, 20)
                 } else if path.starts_with("/article/") {
                     match render_legacy_article(&client, &path) {
                         Ok(result) => result,
@@ -142,28 +120,5 @@ fn main() {
             Err(err) => render_api_error(&err, &path),
         }
     });
-}
-
-fn render_error(code: u16, message: &str, path: &str) -> rouille::Response {
-    let title = format!("{} - {}", code, message);
-
-    let doc = document!(
-        &title,
-        maud::html! {
-            h1 { (&title) }
-            p { "You tried to access \"" (path) "\"" }
-            p { a href="/" { "Go home" } }
-            p { a href=(path) { "Try again" } }
-        },
-    );
-
-    rouille::Response::html(doc.into_string()).with_status_code(code)
-}
-
-fn render_api_error(err: &ApiError, path: &str) -> rouille::Response {
-    match &err {
-        ApiError::External(code, message) => render_error(*code, message, path),
-        ApiError::Internal(message) => render_error(500, message, path),
-        ApiError::Empty => rouille::Response::empty_404(),
-    }
+    */
 }

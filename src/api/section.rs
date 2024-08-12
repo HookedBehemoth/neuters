@@ -1,10 +1,12 @@
+use reqwest::Client;
+
 use super::{common::Articles, error::ApiResult, fetch::fetch};
 
 const API_URL: &str =
     "https://www.reuters.com/pf/api/v3/content/fetch/articles-by-section-alias-or-id-v1";
 
-pub fn fetch_articles_by_section(
-    client: &ureq::Agent,
+pub async fn fetch_articles_by_section(
+    client: &Client,
     path: &str,
     offset: u32,
     size: u32,
@@ -12,5 +14,5 @@ pub fn fetch_articles_by_section(
     let query =
         format!(r#"{{"offset":{offset},"size":{size},"section_id":"{path}","website":"reuters"}}"#);
 
-    fetch(client, API_URL, &query)
+    fetch(client, API_URL, &query).await
 }

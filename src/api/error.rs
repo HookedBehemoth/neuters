@@ -1,8 +1,17 @@
 use std::io;
 
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+};
+use maud::Markup;
+
+use crate::document;
+
 #[derive(Debug)]
 pub enum ApiError {
-    External(u16, String),
+    External(u16, String, String),
+    Reqwest(reqwest::Error),
     Internal(String),
     Empty,
 }
@@ -15,20 +24,45 @@ impl From<serde_json::Error> for ApiError {
     }
 }
 
-impl From<ureq::Error> for ApiError {
-    fn from(error: ureq::Error) -> Self {
-        match error {
-            ureq::Error::Status(code, response) => Self::External(
-                code,
-                response
-                    .into_string()
-                    .unwrap_or_else(|_| "failed to parse response".to_owned()),
-            ),
-            ureq::Error::Transport(err) => Self::Internal(
-                err.message()
-                    .unwrap_or("failed to parse response")
-                    .to_owned(),
-            ),
+impl From<reqwest::Error> for ApiError {
+    fn from(error: reqwest::Error) -> Self {
+        Self::Reqwest(error)
+    }
+}
+
+fn render_reqwest_error(error: reqwest::Error) -> (StatusCode, Markup) {
+    let code = error.status().unwrap_or(StatusCode::CONFLICT);
+    let message = error.to_string();
+    let path = error.url().map(|url| url.to_string()).unwrap_or(String::new());
+    
+    render_error(code, &message, &path)
+}
+
+fn render_error(code: StatusCode, message: &str, path: &str) -> (StatusCode, Markup) {
+    let title = format!("{} - {}", code, message);
+
+    let doc = document!(
+        &title,
+        maud::html! {
+            h1 { (&title) }
+            p { "You tried to access \"" (path) "\"" }
+            p { a href="/" { "Go home" } }
+            p { a href=(path) { "Try again" } }
+        },
+    );
+
+    (code, doc)
+}
+
+impl IntoResponse for ApiError {
+    fn into_response(self) -> Response {
+        match self {
+            ApiError::Reqwest(error) => render_reqwest_error(error).into_response(),
+            ApiError::External(code, path, message) => render_error(StatusCode::from_u16(code).unwrap(), &message, &path).into_response(),
+            ApiError::Internal(message) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, message).into_response()
+            }
+            ApiError::Empty => StatusCode::NOT_FOUND.into_response(),
         }
     }
 }

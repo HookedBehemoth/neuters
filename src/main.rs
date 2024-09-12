@@ -3,6 +3,7 @@ mod render;
 mod routes;
 
 use api::error::ApiError;
+use hypertext::{html_elements, maud, GlobalAttributes, Renderable};
 use routes::{
     about::render_about,
     article::render_article,
@@ -15,8 +16,8 @@ const CSS: &str = include_str!(concat!(env!("OUT_DIR"), "/main.css"));
 
 macro_rules! document {
     ($title:expr, $content:expr, $( $head:expr )? ) => {
-        maud::html! {
-            (maud::DOCTYPE)
+        maud! {
+            !DOCTYPE
             html lang="en" {
                 head {
                     title { ($title) }
@@ -35,8 +36,9 @@ macro_rules! document {
                 }
             }
         }
-    };
+    }
 }
+
 pub(crate) use document;
 
 fn main() {
@@ -150,19 +152,19 @@ fn main() {
 }
 
 fn render_error(code: u16, message: &str, path: &str) -> rouille::Response {
-    let title = format!("{} - {}", code, message);
+    let title = maud!((code) " - " (message));
 
     let doc = document!(
-        &title,
-        maud::html! {
-            h1 { (&title) }
+        title,
+        maud! {
+            h1 { (title) }
             p { "You tried to access \"" (path) "\"" }
             p { a href="/" { "Go home" } }
             p { a href=(path) { "Try again" } }
         },
     );
 
-    rouille::Response::html(doc.into_string()).with_status_code(code)
+    rouille::Response::html(doc.render()).with_status_code(code)
 }
 
 fn render_api_error(err: &ApiError, path: &str) -> rouille::Response {

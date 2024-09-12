@@ -1,9 +1,10 @@
 use crate::{
     api::{article::fetch_article_by_url, error::ApiResult},
     render::byline,
+    routes::HtmxAttributes,
 };
 use chrono::{DateTime, Utc};
-use maud::{html, PreEscaped};
+use hypertext::{html_elements, maud, maud_move, GlobalAttributes, Raw, Renderable};
 
 pub fn render_article(client: &ureq::Agent, path: &str) -> ApiResult<String> {
     let article = fetch_article_by_url(client, path)?;
@@ -15,20 +16,21 @@ pub fn render_article(client: &ureq::Agent, path: &str) -> ApiResult<String> {
 
     let doc = crate::document!(
         &article.title,
-        html!(
+        maud!(
             h1 { (&article.title) }
             p class="byline" {
                 @if let Some(authors) = &article.authors {
-                    @let byline = byline::render_byline(authors);
-                    @if let Ok(time) = published_time {
+                    @if let Ok(time) = &published_time {
                         (time) " - "
                     }
-                    (PreEscaped(byline))
+                    (byline::render_byline(authors))
                 }
             }
-            (render_items(&article.content_elements.unwrap_or_default()))
+            @if let Some(articles) = &article.content_elements {
+                (render_items(articles))
+            }
         ),
-        html! {
+        maud! {
             meta property="og:title" content=(&article.title);
             meta property="og:type" content="article";
             meta property="og:description" content=(&article.description);
@@ -36,11 +38,11 @@ pub fn render_article(client: &ureq::Agent, path: &str) -> ApiResult<String> {
         }
     );
 
-    Ok(doc.into_string())
+    Ok(doc.render().into_inner())
 }
 
-fn render_items(items: &[serde_json::Value]) -> maud::Markup {
-    html! {
+fn render_items(items: &[serde_json::Value]) -> impl Renderable + '_ {
+    maud_move! {
         @for content in items {
             @match content["type"].as_str() {
                 Some("header") => {
@@ -54,7 +56,7 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                 }
                 Some("paragraph") => {
                     @if let Some(content) = content["content"].as_str() {
-                        p { (PreEscaped(&content)) }
+                        p { (Raw(&content)) }
                     }
                 }
                 Some("image") => {
@@ -94,7 +96,7 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                                 tr {
                                     @let cells = match row.as_array() { Some(cells) => cells, None => continue };
                                     @for cell in cells {
-                                        td { (PreEscaped(cell.as_str().unwrap_or_default())) }
+                                        td { (Raw(cell.as_str().unwrap_or_default())) }
                                     }
                                 }
                             }
@@ -113,7 +115,7 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                         } else {
                             markup
                         };
-                       (maud::PreEscaped(embed))
+                       (Raw(embed))
                     }
                 }
                 Some(unknown) => { p { "Unknown type: " (unknown) } }

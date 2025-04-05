@@ -77,7 +77,7 @@ fn main() {
                     request: ureq::Request,
                     next: ureq::MiddlewareNext,
                 ) -> Result<ureq::Response, ureq::Error> {
-                    print!("{}: {}", request.method(), request.url());
+                    println!("{}: {}", request.method(), request.url());
                     let response = next.handle(request);
                     println!(
                         " -> {:?}",

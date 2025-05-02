@@ -209,26 +209,44 @@ fn main() {
     });
 }
 
-fn render_error(code: u16, message: &str, path: &str) -> rouille::Response {
-    let title = format!("{} - {}", code, message);
+fn render_api_error(err: &ApiError, path: &str) -> rouille::Response {
+    let (status, title) = match err {
+        ApiError::Empty |
+        ApiError::External(404, _) => (404, "404 - Content not found".to_string()),
+        ApiError::Redirect(code, _) => (200, format!("{code} - Found a redirect")),
+        ApiError::External(code, _) => (*code, format!("{code} - External error")),
+        ApiError::Internal(message) => (500, format!("500 - Internal server error {message}")),
+    };
+
+    let head = if let ApiError::Redirect(_, location) = err {
+        let location = format!("/{}", location);
+        maud::html! {
+            meta http-equiv="refresh" content=(format!("5;url={}", location));
+            link rel="canonical" href=(location);
+        }
+    } else {
+        maud::html!()
+    };
 
     let doc = document!(
         &title,
         maud::html! {
             h1 { (&title) }
             p { "You tried to access \"" (path) "\"" }
+            @if let ApiError::Redirect(_, location) = err {
+                p { "Redirecting to " (location) " in 5 seconds." } 
+            }
+            @if let ApiError::External(_, message) = err {
+                details {
+                    summary { "Server response" }
+                    p { (message) }
+                }
+            }
             p { a href="/" { "Go home" } }
             p { a href=(path) { "Try again" } }
         },
+        head
     );
 
-    rouille::Response::html(doc.into_string()).with_status_code(code)
-}
-
-fn render_api_error(err: &ApiError, path: &str) -> rouille::Response {
-    match &err {
-        ApiError::External(code, message) => render_error(*code, message, path),
-        ApiError::Internal(message) => render_error(500, message, path),
-        ApiError::Empty => rouille::Response::empty_404(),
-    }
+    rouille::Response::html(doc.into_string()).with_status_code(status)
 }

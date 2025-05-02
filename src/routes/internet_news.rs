@@ -6,11 +6,12 @@ use crate::{
         error::{ApiError, ApiResult},
         legacy_article::{fetch_legacy_article, parse_legacy_article},
     },
+    client::Client,
     render::legacy_article_byline::render_byline,
 };
 
 pub fn render_legacy_article(
-    client: &ureq::Agent,
+    client: &Client,
     path: &str,
 ) -> Result<ApiResult<String>, rouille::Response> {
     let response = match fetch_legacy_article(client, path) {

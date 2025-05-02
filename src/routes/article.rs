@@ -1,11 +1,12 @@
 use crate::{
     api::{article::fetch_article_by_url, error::ApiResult},
+    client::Client,
     render::byline,
 };
 use chrono::{DateTime, Utc};
 use maud::{html, PreEscaped};
 
-pub fn render_article(client: &ureq::Agent, path: &str) -> ApiResult<String> {
+pub fn render_article(client: &Client, path: &str) -> ApiResult<String> {
     let article = fetch_article_by_url(client, path)?;
 
     let published_time = article

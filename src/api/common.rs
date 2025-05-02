@@ -10,9 +10,7 @@ pub struct Articles {
 
 #[derive(Deserialize)]
 pub struct Pagination {
-    pub size: Option<u32>,
     pub total_size: Option<u32>,
-    pub orderby: String,
 }
 
 #[derive(Deserialize)]
@@ -23,12 +21,6 @@ pub struct Article {
     pub content_elements: Option<Box<[serde_json::Value]>>,
     pub authors: Option<Box<[Topic]>>,
     pub published_time: String,
-}
-
-#[derive(Deserialize)]
-pub struct Section {
-    pub path: String,
-    pub name: String,
 }
 
 #[derive(Deserialize)]

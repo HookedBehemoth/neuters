@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::api::error::ApiError;
+use crate::{api::error::ApiError, client::Client};
 
 use super::error::ApiResult;
 
@@ -27,7 +27,6 @@ pub struct LegacyArticleArticle {
 
 #[derive(Deserialize)]
 pub struct LegacyArticleStream {
-    pub id: String,
     pub headline: String,
     pub description: String,
     pub date: LegacyArticleDate,
@@ -52,10 +51,7 @@ pub struct LegacyArticleBodyItem {
     pub content: String,
 }
 
-pub fn fetch_legacy_article(
-    client: &ureq::Agent,
-    path: &str,
-) -> Result<ureq::Response, ureq::Error> {
+pub fn fetch_legacy_article(client: &Client, path: &str) -> Result<ureq::Response, ureq::Error> {
     let link = format!("https://www.reuters.com{path}");
 
     client.get(&link).call()

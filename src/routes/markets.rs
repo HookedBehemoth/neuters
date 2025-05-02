@@ -1,6 +1,9 @@
-use crate::api::{error::ApiResult, markit::fetch_by_stock_symbol};
+use crate::{
+    api::{error::ApiResult, markit::fetch_by_stock_symbol},
+    client::Client,
+};
 
-pub fn render_market(client: &ureq::Agent, path: &str) -> ApiResult<String> {
+pub fn render_market(client: &Client, path: &str) -> ApiResult<String> {
     let company = if let Some(end) = path.find('/') {
         &path[..end]
     } else {

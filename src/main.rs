@@ -1,8 +1,10 @@
 mod api;
+mod client;
 mod render;
 mod routes;
 
 use api::error::ApiError;
+use client::Client;
 use routes::{
     about::render_about,
     article::render_article,
@@ -96,6 +98,15 @@ fn main() {
 
         client_builder.build()
     };
+
+    let mut headers = vec![];
+
+    if let Ok(cookie) = pargs.value_from_str("--cookie") {
+        println!("Cookie: {cookie}");
+        headers.push(("Cookie".to_string(), cookie));
+    };
+
+    let client = Client::new(client, headers);
 
     println!("Listening on http://{}", list_address);
     rouille::start_server(list_address, move |request| {

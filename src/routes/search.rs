@@ -2,6 +2,7 @@ use crate::api::{
     common::Articles, error::ApiResult, search::fetch_articles_by_search,
     section::fetch_articles_by_section, topic::fetch_articles_by_topic,
 };
+use crate::client::Client;
 use crate::document;
 use maud::html;
 
@@ -12,22 +13,17 @@ enum SearchType {
     Query,
 }
 
-pub fn render_topic(client: &ureq::Agent, path: &str, offset: u32, size: u32) -> ApiResult<String> {
+pub fn render_topic(client: &Client, path: &str, offset: u32, size: u32) -> ApiResult<String> {
     let article = fetch_articles_by_topic(client, path, offset, size)?;
     render_articles(article, path, offset, size, SearchType::Topic)
 }
 
-pub fn render_section(
-    client: &ureq::Agent,
-    path: &str,
-    offset: u32,
-    size: u32,
-) -> ApiResult<String> {
+pub fn render_section(client: &Client, path: &str, offset: u32, size: u32) -> ApiResult<String> {
     let article = fetch_articles_by_section(client, path, offset, size)?;
     render_articles(article, path, offset, size, SearchType::Section)
 }
 
-pub fn render_search(client: &ureq::Agent, request: &rouille::Request) -> ApiResult<String> {
+pub fn render_search(client: &Client, request: &rouille::Request) -> ApiResult<String> {
     match request.get_param("query") {
         Some(query) => {
             let offset = request
@@ -79,7 +75,7 @@ fn render_articles(
             articles
                 .topics
                 .as_ref()
-                .and_then(|t| t.get(0).map(|t| t.name.as_str()))
+                .and_then(|t| t.first().map(|t| t.name.as_str()))
                 .unwrap_or(""),
             format!("{path}?"),
         ),

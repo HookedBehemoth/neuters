@@ -1,10 +1,13 @@
-use crate::api::{
-    common::ApiResponse,
-    error::{ApiError, ApiResult},
+use crate::{
+    api::{
+        common::ApiResponse,
+        error::{ApiError, ApiResult},
+    },
+    client::Client,
 };
 use serde::Deserialize;
 
-pub(crate) fn fetch<T>(client: &ureq::Agent, url: &str, query: &str) -> ApiResult<T>
+pub(crate) fn fetch<T>(client: &Client, url: &str, query: &str) -> ApiResult<T>
 where
     T: for<'a> Deserialize<'a>,
 {

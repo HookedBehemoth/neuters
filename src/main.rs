@@ -3,6 +3,8 @@ mod client;
 mod render;
 mod routes;
 
+use std::collections::HashMap;
+
 use api::error::ApiError;
 use client::Client;
 use routes::{
@@ -40,6 +42,18 @@ macro_rules! document {
     };
 }
 pub(crate) use document;
+
+pub struct Section {
+    id: String,
+    name: String,
+    children: Vec<SectionChild>,
+}
+
+// Shallow copy of the section, so we don't have to clone the whole hierarchy multiple times
+pub struct SectionChild {
+    id: String,
+    name: String,
+}
 
 fn main() {
     let mut pargs = pico_args::Arguments::from_env();
@@ -108,6 +122,32 @@ fn main() {
 
     let client = Client::new(client, headers);
 
+    println!("Fetching site hierarchy");
+    let site_hierarchy = api::section::fetch_site_hierarchy_by_name(&client).unwrap();
+
+    let mut sections_by_id: HashMap<String, Section> = std::collections::HashMap::new();
+    let mut queue = vec![site_hierarchy];
+    while let Some(section) = queue.pop() {
+        let children = section
+            .children
+            .as_deref()
+            .unwrap_or_default()
+            .iter()
+            .map(|s| SectionChild { id: s.id.clone(), name: s.name.clone() })
+            .collect();
+        for child in section.children.unwrap_or_default() {
+            queue.push(child);
+        }
+        let node= Section {
+            id: section.id.clone(),
+            name: section.name.clone(),
+            children,
+        };
+        sections_by_id.insert(section.id, node);
+    }
+    println!("Fetched site hierarchy");
+    println!("Sections: {}", sections_by_id.len());
+
     println!("Listening on http://{}", list_address);
     rouille::start_server(list_address, move |request| {
         let path = request.url();
@@ -116,7 +156,11 @@ fn main() {
                 let offset = request
                     .get_param("offset")
                     .map_or(0, |s| s.parse::<u32>().unwrap_or(0));
-                render_section(&client, "/world/", offset, 8)
+                let section = sections_by_id
+                    .get("/world/")
+                    .unwrap_or_else(|| panic!("Section 'world' not found"));
+            
+                render_section(&client, section, offset, 8)
             }
             "/about" => render_about(),
             "/search" | "/search/" => render_search(&client, request),
@@ -133,7 +177,12 @@ fn main() {
             }
             "/favicon.ico" => Err(ApiError::Empty),
             _ => {
-                if path.starts_with("/authors/") {
+                if let Some(section) = sections_by_id.get(path.as_str()) {
+                    let offset = request
+                        .get_param("offset")
+                        .map_or(0, |s| s.parse::<u32>().unwrap_or(0));
+                    render_section(&client, section, offset, 8)
+                } else if path.starts_with("/authors/") {
                     let offset = request
                         .get_param("offset")
                         .map_or(0, |s| s.parse::<u32>().unwrap_or(0));

@@ -5,7 +5,6 @@ pub struct Articles {
     pub pagination: Pagination,
     pub articles: Option<Box<[Article]>>,
     pub topics: Option<Box<[Topic]>>,
-    pub section: Option<SectionDescription>,
 }
 
 #[derive(Deserialize)]
@@ -32,13 +31,15 @@ pub struct ApiResponse<T> {
 }
 
 #[derive(Deserialize)]
-pub struct SectionDescription {
-    pub name: String,
-}
-
-#[derive(Deserialize)]
 pub struct Topic {
     pub name: String,
     pub topic_url: Option<String>,
     pub byline: String,
+}
+
+#[derive(Clone, Deserialize)]
+pub struct Section {
+    pub name: String,
+    pub id: String,
+    pub children: Option<Vec<Section>>,
 }

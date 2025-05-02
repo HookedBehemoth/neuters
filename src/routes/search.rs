@@ -3,8 +3,8 @@ use crate::api::{
     section::fetch_articles_by_section, topic::fetch_articles_by_topic,
 };
 use crate::client::Client;
-use crate::document;
-use maud::html;
+use crate::{document, Section};
+use maud::{html, Markup};
 
 #[derive(PartialEq)]
 enum SearchType {
@@ -15,12 +15,45 @@ enum SearchType {
 
 pub fn render_topic(client: &Client, path: &str, offset: u32, size: u32) -> ApiResult<String> {
     let article = fetch_articles_by_topic(client, path, offset, size)?;
-    render_articles(article, path, offset, size, SearchType::Topic)
+    let title = article
+        .topics
+        .as_ref()
+        .and_then(|t| t.first().map(|t| t.name.as_str()))
+        .unwrap_or("");
+    let trailer = html! { h1 { (title) } };
+    render_articles(article, path, offset, size, SearchType::Topic, trailer)
 }
 
-pub fn render_section(client: &Client, path: &str, offset: u32, size: u32) -> ApiResult<String> {
-    let article = fetch_articles_by_section(client, path, offset, size)?;
-    render_articles(article, path, offset, size, SearchType::Section)
+pub fn render_section(
+    client: &Client,
+    section: &Section,
+    offset: u32,
+    size: u32,
+) -> ApiResult<String> {
+    let article = fetch_articles_by_section(client, &section.id, offset, size)?;
+    let trailer = html! {
+        div {
+            h1 { (section.name) }
+            @if !section.children.is_empty() {
+                details {
+                    summary { "Subsections" }
+                    ul {
+                        @for child in &section.children {
+                            li { a href=(child.id) { (child.name) } }
+                        }
+                    }
+                }
+            }
+        }
+    };
+    render_articles(
+        article,
+        &section.id,
+        offset,
+        size,
+        SearchType::Section,
+        trailer,
+    )
 }
 
 pub fn render_search(client: &Client, request: &rouille::Request) -> ApiResult<String> {
@@ -36,7 +69,14 @@ pub fn render_search(client: &Client, request: &rouille::Request) -> ApiResult<S
 
             let articles = fetch_articles_by_search(client, &query, offset, size)?;
 
-            render_articles(articles, &query, offset, size, SearchType::Query)
+            let trailer = html! {
+                form {
+                    input type="text" name="query" placeholder="Keywords..." value=(query) required="";
+                    button type="submit" { "Search" }
+                }
+            };
+
+            render_articles(articles, &query, offset, size, SearchType::Query, trailer)
         }
         _ => {
             let doc = document!(
@@ -61,25 +101,12 @@ fn render_articles(
     offset: u32,
     steps: u32,
     search_type: SearchType,
+    trailer: Markup,
 ) -> ApiResult<String> {
-    let (title, url) = match search_type {
-        SearchType::Section => (
-            articles
-                .section
-                .as_ref()
-                .map(|s| s.name.as_str())
-                .unwrap_or(""),
-            format!("{path}?"),
-        ),
-        SearchType::Topic => (
-            articles
-                .topics
-                .as_ref()
-                .and_then(|t| t.first().map(|t| t.name.as_str()))
-                .unwrap_or(""),
-            format!("{path}?"),
-        ),
-        SearchType::Query => (path, format!("/search?query={path}&")),
+    let url = match search_type {
+        SearchType::Section => format!("{path}?"),
+        SearchType::Topic => format!("{path}?"),
+        SearchType::Query => format!("/search?query={path}&"),
     };
 
     let count = articles
@@ -105,13 +132,7 @@ fn render_articles(
     let doc = document!(
         "Neuters - Reuters Proxy",
         html! {
-            h1 { (title) }
-            @if search_type == SearchType::Query {
-                form {
-                    input type="text" name="query" placeholder="Keywords..." value=(path) required="";
-                    button type="submit" { "Search" }
-                }
-            }
+            (trailer)
             @if let Some(articles) = articles.articles {
                 ul {
                     @for article in articles.iter() {

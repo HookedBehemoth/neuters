@@ -5,7 +5,7 @@ mod routes;
 
 use std::collections::HashMap;
 
-use api::error::ApiError;
+use api::{error::ApiError, redirect::load_redirect};
 use client::Client;
 use routes::{
     about::render_about,
@@ -187,6 +187,23 @@ fn main() {
                         .get_param("offset")
                         .map_or(0, |s| s.parse::<u32>().unwrap_or(0));
                     render_topic(&client, &path, offset, 20)
+                } else if let Some(path) = path.strip_prefix("/topic/") {
+                    let full_path = format!("https://www.reuters.com/topic/{path}");
+                    let redirect = load_redirect(&client, &full_path);
+                    match redirect {
+                        Ok((status, location)) => {
+                            return rouille::Response {
+                                status_code: status,
+                                headers: vec![
+                                    ("Location".into(), strip_prefix(&location).to_owned().into()),
+                                    ("Cache-Control".into(), "public, max-age=31536000".into()),
+                                ],
+                                data: rouille::ResponseBody::empty(),
+                                upgrade: None,
+                            };
+                        }
+                        Err(err) => Err(err),
+                    }
                 } else if path.starts_with("/article/") {
                     match render_legacy_article(&client, &path) {
                         Ok(result) => result,
@@ -213,19 +230,33 @@ fn render_api_error(err: &ApiError, path: &str) -> rouille::Response {
     let (status, title) = match err {
         ApiError::Empty |
         ApiError::External(404, _) => (404, "404 - Content not found".to_string()),
-        ApiError::Redirect(code, _) => (200, format!("{code} - Found a redirect")),
+        ApiError::Redirect(_, _) => (200, format!("Redirect found")),
         ApiError::External(code, _) => (*code, format!("{code} - External error")),
         ApiError::Internal(message) => (500, format!("500 - Internal server error {message}")),
     };
 
-    let head = if let ApiError::Redirect(_, location) = err {
-        let location = format!("/{}", location);
-        maud::html! {
-            meta http-equiv="refresh" content=(format!("5;url={}", location));
-            link rel="canonical" href=(location);
-        }
-    } else {
-        maud::html!()
+    let (head, details) = match err {
+        ApiError::Empty => (maud::html!(), maud::html!()),
+        ApiError::Redirect(_, location) => {
+            let location = strip_prefix(location);
+            (
+                maud::html! {
+                    meta http-equiv="refresh" content=(format!("10; url={}", location));
+                    link rel="canonical" href=(location);
+                },
+                maud::html! {
+                    p { "Redirecting to " (location) " in 10 seconds. Or click " a href=(location) { "here" } " to follow the link directly." }
+                }
+            )},
+        ApiError::External(_, message) => (
+            maud::html!(),
+            maud::html! {
+                details {
+                    summary { "Server response" }
+                    p { (message) }
+                }
+            }),
+        ApiError::Internal(_) => (maud::html!(), maud::html!()),
     };
 
     let doc = document!(
@@ -233,15 +264,7 @@ fn render_api_error(err: &ApiError, path: &str) -> rouille::Response {
         maud::html! {
             h1 { (&title) }
             p { "You tried to access \"" (path) "\"" }
-            @if let ApiError::Redirect(_, location) = err {
-                p { "Redirecting to " (location) " in 5 seconds." } 
-            }
-            @if let ApiError::External(_, message) = err {
-                details {
-                    summary { "Server response" }
-                    p { (message) }
-                }
-            }
+            (details)
             p { a href="/" { "Go home" } }
             p { a href=(path) { "Try again" } }
         },
@@ -249,4 +272,14 @@ fn render_api_error(err: &ApiError, path: &str) -> rouille::Response {
     );
 
     rouille::Response::html(doc.into_string()).with_status_code(status)
+}
+
+pub fn strip_prefix(path: &str) -> &str {
+    if let Some(path) = path.strip_prefix("https://www.reuters.com") {
+        path
+    } else if let Some(path) = path.strip_prefix("http://www.reuters.com") {
+        path
+    } else {
+        path
+    }
 }

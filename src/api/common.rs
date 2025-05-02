@@ -15,6 +15,7 @@ pub struct Pagination {
 #[derive(Deserialize)]
 pub struct Article {
     pub title: String,
+    pub subtype: Option<String>,
     pub canonical_url: String,
     pub description: String,
     pub content_elements: Option<Box<[serde_json::Value]>>,

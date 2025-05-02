@@ -27,7 +27,19 @@ pub fn render_article(client: &Client, path: &str) -> ApiResult<String> {
                     (PreEscaped(byline))
                 }
             }
-            (render_items(&article.content_elements.unwrap_or_default()))
+            @if Some("live-blog") == article.subtype.as_deref() {
+                p {
+                    "You seem to have accidentally clicked on AI sloppa. There is nothing of value here."
+                }
+                p {
+                    "Neuters is currently not planning to support live blogs.
+                    If you want to see the original \"content\", disable any redirector extension and click on this link: "
+                    @let url = format!("https://www.reuters.com{}", path);
+                    a href=(url) { "Original" }
+                }
+            } @else {
+                (render_items(&article.content_elements.unwrap_or_default()))
+            }
         ),
         html! {
             meta property="og:title" content=(&article.title);

@@ -16,9 +16,9 @@ pub struct Settings {
 
 impl Settings {
     pub fn from_request(request: &Request) -> Self {
-        let mut embed_images = true;
-        let mut embed_embeds = true;
-        let mut proxy_images = false;
+        let mut embed_images = false;
+        let mut embed_embeds = false;
+        let mut proxy_images = true;
         let mut fast_redirect = false;
         let mut redirect_timer = 5;
         for (key, value) in input::cookies(request) {

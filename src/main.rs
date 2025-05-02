@@ -129,33 +129,35 @@ fn main() {
     let client = Client::new(client, headers);
 
     println!("Fetching site hierarchy");
-    let site_hierarchy = api::section::fetch_site_hierarchy_by_name(&client).unwrap();
-
     let mut sections_by_id: HashMap<String, Section> = std::collections::HashMap::new();
-    let mut queue = vec![site_hierarchy];
-    while let Some(section) = queue.pop() {
-        let children = section
-            .children
-            .as_deref()
-            .unwrap_or_default()
-            .iter()
-            .map(|s| SectionChild {
-                id: s.id.clone(),
-                name: s.name.clone(),
-            })
-            .collect();
-        for child in section.children.unwrap_or_default() {
-            queue.push(child);
+    if let Ok(section) = api::section::fetch_site_hierarchy_by_name(&client) {
+        let mut queue = vec![section];
+        while let Some(section) = queue.pop() {
+            let children = section
+                .children
+                .as_deref()
+                .unwrap_or_default()
+                .iter()
+                .map(|s| SectionChild {
+                    id: s.id.clone(),
+                    name: s.name.clone(),
+                })
+                .collect();
+            for child in section.children.unwrap_or_default() {
+                queue.push(child);
+            }
+            let node = Section {
+                id: section.id.clone(),
+                name: section.name.clone(),
+                children,
+            };
+            sections_by_id.insert(section.id, node);
         }
-        let node = Section {
-            id: section.id.clone(),
-            name: section.name.clone(),
-            children,
-        };
-        sections_by_id.insert(section.id, node);
-    }
-    println!("Fetched site hierarchy");
-    println!("Sections: {}", sections_by_id.len());
+        println!("Fetched site hierarchy");
+        println!("Sections: {}", sections_by_id.len());
+    } else {
+        eprintln!("Failed to fetch site hierarchy");
+    };
 
     println!("Listening on http://{}", list_address);
     rouille::start_server(list_address, move |request| {

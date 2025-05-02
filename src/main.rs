@@ -2,6 +2,7 @@ mod api;
 mod client;
 mod render;
 mod routes;
+mod settings;
 
 use std::collections::HashMap;
 
@@ -12,7 +13,9 @@ use routes::{
     article::render_article,
     internet_news::render_legacy_article,
     markets::render_market,
+    proxy::image_proxy,
     search::{render_search, render_section, render_topic},
+    settings::handle_settings,
 };
 
 const CSS: &str = include_str!(concat!(env!("OUT_DIR"), "/main.css"));
@@ -24,7 +27,7 @@ macro_rules! document {
             html lang="en" {
                 head {
                     title { ($title) }
-                    link rel="stylesheet" href="/main.css?v=0";
+                    link rel="stylesheet" href="/main.css?v=1";
                     meta name="viewport" content="width=device-width, initial-scale=1";
                     $( ($head) )?
                 }
@@ -35,6 +38,8 @@ macro_rules! document {
                         " - "
                         a href="/search" { "Search" }
                         " - "
+                        a href="/settings" { "Settings" }
+                        " - "
                         a href="/about" { "About" } } }
                 }
             }
@@ -42,6 +47,7 @@ macro_rules! document {
     };
 }
 pub(crate) use document;
+use settings::Settings;
 
 pub struct Section {
     id: String,
@@ -133,12 +139,15 @@ fn main() {
             .as_deref()
             .unwrap_or_default()
             .iter()
-            .map(|s| SectionChild { id: s.id.clone(), name: s.name.clone() })
+            .map(|s| SectionChild {
+                id: s.id.clone(),
+                name: s.name.clone(),
+            })
             .collect();
         for child in section.children.unwrap_or_default() {
             queue.push(child);
         }
-        let node= Section {
+        let node = Section {
             id: section.id.clone(),
             name: section.name.clone(),
             children,
@@ -151,6 +160,8 @@ fn main() {
     println!("Listening on http://{}", list_address);
     rouille::start_server(list_address, move |request| {
         let path = request.url();
+        let settings = Settings::from_request(request);
+
         let response = match path.as_str() {
             "/" | "/home" | "/world/" => {
                 let offset = request
@@ -159,10 +170,11 @@ fn main() {
                 let section = sections_by_id
                     .get("/world/")
                     .unwrap_or_else(|| panic!("Section 'world' not found"));
-            
+
                 render_section(&client, section, offset, 8)
             }
             "/about" => render_about(),
+            "/settings" => return handle_settings(request, &settings),
             "/search" | "/search/" => render_search(&client, request),
             "/main.css" => {
                 return rouille::Response {
@@ -213,23 +225,26 @@ fn main() {
                     render_market(&client, path)
                 } else if let Some(path) = path.strip_prefix("/markets/companies/") {
                     render_market(&client, path)
+                } else if let Some(path) = request.raw_url().strip_prefix("/proxy/") {
+                    return image_proxy(&client, request, path);
                 } else {
-                    render_article(&client, &path)
+                    render_article(&client, &path, &settings)
                 }
             }
         };
 
         match response {
             Ok(body) => rouille::Response::html(body),
-            Err(err) => render_api_error(&err, &path),
+            Err(err) => render_api_error(&err, &path, &settings),
         }
     });
 }
 
-fn render_api_error(err: &ApiError, path: &str) -> rouille::Response {
+fn render_api_error(err: &ApiError, path: &str, settings: &Settings) -> rouille::Response {
     let (status, title) = match err {
-        ApiError::Empty |
-        ApiError::External(404, _) => (404, "404 - Content not found".to_string()),
+        ApiError::Empty | ApiError::External(404, _) => {
+            (404, "404 - Content not found".to_string())
+        }
         ApiError::Redirect(_, _) => (200, format!("Redirect found")),
         ApiError::External(code, _) => (*code, format!("{code} - External error")),
         ApiError::Internal(message) => (500, format!("500 - Internal server error {message}")),
@@ -241,13 +256,14 @@ fn render_api_error(err: &ApiError, path: &str) -> rouille::Response {
             let location = strip_prefix(location);
             (
                 maud::html! {
-                    meta http-equiv="refresh" content=(format!("10; url={}", location));
+                    meta http-equiv="refresh" content=(format!("{}; url={}", settings.redirect_timer, location));
                     link rel="canonical" href=(location);
                 },
                 maud::html! {
-                    p { "Redirecting to " (location) " in 10 seconds. Or click " a href=(location) { "here" } " to follow the link directly." }
-                }
-            )},
+                    p { "Redirecting to " (location) " in " (settings.redirect_timer) " seconds. Or click " a href=(location) { "here" } " to follow the link directly." }
+                },
+            )
+        }
         ApiError::External(_, message) => (
             maud::html!(),
             maud::html! {
@@ -255,7 +271,8 @@ fn render_api_error(err: &ApiError, path: &str) -> rouille::Response {
                     summary { "Server response" }
                     p { (message) }
                 }
-            }),
+            },
+        ),
         ApiError::Internal(_) => (maud::html!(), maud::html!()),
     };
 

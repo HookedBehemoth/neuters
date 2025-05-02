@@ -20,7 +20,16 @@ pub struct Article {
     pub description: String,
     pub content_elements: Option<Box<[serde_json::Value]>>,
     pub authors: Option<Box<[Topic]>>,
+    pub thumbnail: Option<Image>,
     pub published_time: String,
+}
+
+#[derive(Deserialize)]
+pub struct Image {
+    pub caption: Option<String>,
+    pub width: u16,
+    pub height: u16,
+    pub resizer_url: String,
 }
 
 #[derive(Deserialize)]

@@ -1,12 +1,13 @@
 use crate::{
-    api::{article::fetch_article_by_url, error::ApiResult},
+    api::{article::fetch_article_by_url, common::Image, error::ApiResult},
     client::Client,
-    render::byline,
+    render::{byline, images::render_image},
+    settings::Settings,
 };
 use chrono::{DateTime, Utc};
 use maud::{html, PreEscaped};
 
-pub fn render_article(client: &Client, path: &str) -> ApiResult<String> {
+pub fn render_article(client: &Client, path: &str, settings: &Settings) -> ApiResult<String> {
     let article = fetch_article_by_url(client, path)?;
 
     let published_time = article
@@ -29,16 +30,25 @@ pub fn render_article(client: &Client, path: &str) -> ApiResult<String> {
             }
             @if Some("live-blog") == article.subtype.as_deref() {
                 p {
-                    "You seem to have accidentally clicked on AI sloppa. There is nothing of value here."
+                    i {
+                        "You seem to have accidentally clicked on AI sloppa. There is nothing of value here."
+                    }
                 }
                 p {
-                    "Neuters is currently not planning to support live blogs.
-                    If you want to see the original \"content\", disable any redirector extension and click on this link: "
-                    @let url = format!("https://www.reuters.com{}", path);
-                    a href=(url) { "Original" }
+                    i {
+                        "Neuters is currently not planning to support live blogs.
+                        If you want to see the original \"content\", disable any redirector extension and click on this link: "
+                        @let url = format!("https://www.reuters.com{}", path);
+                        a href=(url) { "Original" }
+                    }
                 }
             } @else {
-                (render_items(&article.content_elements.unwrap_or_default()))
+                @if settings.embed_images {
+                    @if let Some(thumbnail) = &article.thumbnail {
+                        (render_image(thumbnail, settings))
+                    }
+                }
+                (render_items(&article.content_elements.unwrap_or_default(), settings))
             }
         ),
         html! {
@@ -52,7 +62,7 @@ pub fn render_article(client: &Client, path: &str) -> ApiResult<String> {
     Ok(doc.into_string())
 }
 
-fn render_items(items: &[serde_json::Value]) -> maud::Markup {
+fn render_items(items: &[serde_json::Value], settings: &Settings) -> maud::Markup {
     html! {
         @for content in items {
             @match content["type"].as_str() {
@@ -75,24 +85,50 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                     }
                 }
                 Some("image") => {
-                    @if let Some(image) = content["url"].as_str() {
-                        @let alt = content["alt"].as_str();
-                        @let (width, height) = (content["width"].as_u64(), content["height"].as_u64());
-                        img src=(image) alt=[alt] width=[width] height=[height];
+                    @if settings.embed_images {
+                        @if let Some(image) = content["url"].as_str() {
+                            @let alt = content["alt"].as_str();
+                            @let (width, height) = (content["width"].as_u64(), content["height"].as_u64());
+                            img src=(image) alt=[alt] width=[width] height=[height];
+                        }
+                    } @else {
+                        p {
+                            i {
+                                "Embedding images is disabled. Navigate to the original resource or change the settings to enable it."
+                            }
+                        }
+                        @if let Some(image) = content["url"].as_str() {
+                            p {
+                                a href=(image) { "Image" }
+                            }
+                        }
                     }
                 }
                 Some("graphic") => {
-                    @match content["graphic_type"].as_str() {
-                        Some("image") => {
-                            @if let (Some(image), Some(description)) = (content["url"].as_str(), content["description"].as_str()) {
-                                figure {
-                                    img src=(image) alt=(description);
-                                    figcaption { (description) }
+                    @if settings.embed_images {
+                        @match content["graphic_type"].as_str() {
+                            Some("image") => {
+                                @if let (Some(image), Some(description)) = (content["url"].as_str(), content["description"].as_str()) {
+                                    figure {
+                                        img src=(image) alt=(description);
+                                        figcaption { (description) }
+                                    }
                                 }
                             }
+                            Some(unknown) => { p { "Unknown graphic type: " (unknown) } }
+                            None => { p { "Missing graphic type" } }
                         }
-                        Some(unknown) => { p { "Unknown graphic type: " (unknown) } }
-                        None => { p { "Missing graphic type" } }
+                    } @else {
+                        p {
+                            i {
+                                "Embedding images is disabled. Navigate to the original resource or change the settings to enable it."
+                            }
+                        }
+                        @if let Some(image) = content["url"].as_str() {
+                            p {
+                                a href=(image) { "Image" }
+                            }
+                        }
                     }
                 }
                 Some("table") => {
@@ -120,17 +156,25 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                 }
                 Some("list") => {
                     @if let Some(items) = content["items"].as_array() {
-                        (render_items(items))
+                        (render_items(items, settings))
                     }
                 }
                 Some("social_media") => {
-                    @if let Some(markup) = content["html"].as_str() {
-                        @let embed = if let Some(index) = markup.find("\n<script") {
-                            &markup[..index]
-                        } else {
-                            markup
-                        };
-                       (maud::PreEscaped(embed))
+                    @if settings.embed_embeds {
+                        @if let Some(markup) = content["html"].as_str() {
+                            @let embed = if let Some(index) = markup.find("\n<script") {
+                                &markup[..index]
+                            } else {
+                                markup
+                            };
+                           (maud::PreEscaped(embed))
+                        }
+                    } @else {
+                        p {
+                            i {
+                                "Embedding social media is disabled. Navigate to the original resource or change the settings to enable it."
+                            }
+                        }
                     }
                 }
                 Some(unknown) => { p { "Unknown type: " (unknown) } }

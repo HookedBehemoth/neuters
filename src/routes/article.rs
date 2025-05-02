@@ -55,7 +55,11 @@ fn render_items(items: &[serde_json::Value]) -> maud::Markup {
                 }
                 Some("paragraph") => {
                     @if let Some(content) = content["content"].as_str() {
-                        p { (PreEscaped(&content)) }
+                        @if content.contains("href=\"https://www.reuters.com/") {
+                            p { (PreEscaped(content.replace("href=\"https://www.reuters.com/", "href=\"/"))) }
+                        } @else {
+                            p { (PreEscaped(content)) }
+                        };
                     }
                 }
                 Some("image") => {

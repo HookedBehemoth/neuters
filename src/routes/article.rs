@@ -1,5 +1,5 @@
 use crate::{
-    api::{article::fetch_article_by_url, common::Image, error::ApiResult},
+    api::{article::fetch_article_by_url, error::ApiResult},
     client::Client,
     render::{byline, images::render_image},
     settings::Settings,

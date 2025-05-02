@@ -54,7 +54,7 @@ pub struct LegacyArticleBodyItem {
 pub fn fetch_legacy_article(client: &Client, path: &str) -> Result<ureq::Response, ureq::Error> {
     let link = format!("https://www.reuters.com{path}");
 
-    get(&client, &link).call()
+    get(client, &link).call()
 }
 
 pub fn parse_legacy_article(request: ureq::Response) -> ApiResult<LegacyArticle> {

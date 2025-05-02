@@ -6,7 +6,7 @@ pub fn render_image(thumbnail: &Image, settings: &Settings) -> maud::Markup {
     let resizer_url = &thumbnail.resizer_url;
 
     let url = if settings.proxy_images {
-        if let Some(base_path) = proxy::strip_prefix(&resizer_url) {
+        if let Some(base_path) = proxy::strip_prefix(resizer_url) {
             format!("/proxy/{base_path}")
         } else {
             return maud::html! {

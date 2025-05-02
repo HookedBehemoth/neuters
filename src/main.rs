@@ -241,11 +241,25 @@ fn main() {
 }
 
 fn render_api_error(err: &ApiError, path: &str, settings: &Settings) -> rouille::Response {
+    if settings.fast_redirect {
+        if let ApiError::Redirect(code, location) = err {
+            return rouille::Response {
+                status_code: *code,
+                headers: vec![
+                    ("Location".into(), strip_prefix(location).to_owned().into()),
+                    ("Cache-Control".into(), "public, max-age=31536000".into()),
+                ],
+                data: rouille::ResponseBody::empty(),
+                upgrade: None,
+            };
+        }
+    }
+
     let (status, title) = match err {
         ApiError::Empty | ApiError::External(404, _) => {
             (404, "404 - Content not found".to_string())
         }
-        ApiError::Redirect(_, _) => (200, format!("Redirect found")),
+        ApiError::Redirect(_, _) => (200, "Redirect found".to_string()),
         ApiError::External(code, _) => (*code, format!("{code} - External error")),
         ApiError::Internal(message) => (500, format!("500 - Internal server error {message}")),
     };

@@ -1,15 +1,16 @@
 use maud::{html, Markup};
-use rouille::{input, post_input, try_or_400, Request, Response};
+use rouille::{post_input, try_or_400, Request, Response};
 
 use crate::{
     document,
-    settings::{Settings, EMBED_EMBEDS, EMBED_IMAGES, PROXY_IMAGES, REDIRECT_TIMER},
+    settings::{Settings, EMBED_EMBEDS, EMBED_IMAGES, FAST_REDIRECT, PROXY_IMAGES, REDIRECT_TIMER},
 };
 
 fn render_settings(
     embed_images: bool,
     embed_embeds: bool,
     proxy_images: bool,
+    fast_redirect: bool,
     redirect_timer: u32,
 ) -> Markup {
     document!(
@@ -35,6 +36,11 @@ fn render_settings(
                     input type="checkbox" id=(PROXY_IMAGES) name=(PROXY_IMAGES) checked[proxy_images] {}
                 }
 
+                label for=(FAST_REDIRECT) {
+                    "Use fast redirect"
+                    input type="checkbox" id=(FAST_REDIRECT) name=(FAST_REDIRECT) checked[fast_redirect] {}
+                }
+
                 label for=(REDIRECT_TIMER) {
                     "Redirect timer"
                     input type="number" id=(REDIRECT_TIMER) name=(REDIRECT_TIMER) value=(redirect_timer) {}
@@ -52,6 +58,7 @@ fn store_settings(
     embed_images: bool,
     embed_embeds: bool,
     proxy_images: bool,
+    fast_redirect: bool,
     redirect_timer: u32,
 ) -> Response {
     Response::redirect_303("/settings")
@@ -69,6 +76,10 @@ fn store_settings(
         )
         .with_additional_header(
             "Set-Cookie",
+            format!("{FAST_REDIRECT}={}; Path=/; SameSite=Strict", fast_redirect),
+        )
+        .with_additional_header(
+            "Set-Cookie",
             format!(
                 "{REDIRECT_TIMER}={}; Path=/; SameSite=Strict",
                 redirect_timer
@@ -82,6 +93,7 @@ pub fn handle_settings(request: &Request, settings: &Settings) -> Response {
             embed_images: bool,
             embed_embeds: bool,
             proxy_images: bool,
+            fast_redirect: bool,
             redirect_timer: i32,
         }));
 
@@ -89,6 +101,7 @@ pub fn handle_settings(request: &Request, settings: &Settings) -> Response {
             settings.embed_images,
             settings.embed_embeds,
             settings.proxy_images,
+            settings.fast_redirect,
             settings.redirect_timer.clamp(0, 600) as u32,
         )
     } else {
@@ -96,6 +109,7 @@ pub fn handle_settings(request: &Request, settings: &Settings) -> Response {
             settings.embed_images,
             settings.embed_embeds,
             settings.proxy_images,
+            settings.fast_redirect,
             settings.redirect_timer,
         );
         Response::html(page).with_status_code(200)

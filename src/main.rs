@@ -36,8 +36,8 @@ macro_rules! document {
                     footer { div {
                         a href="/" { "Home" }
                         " - "
-                        a href="/search" { "Search" }
-                        " - "
+                        // a href="/search" { "Search" }
+                        // " - "
                         a href="/settings" { "Settings" }
                         " - "
                         a href="/about" { "About" } } }

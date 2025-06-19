@@ -57,6 +57,7 @@ pub fn render_section(
 }
 
 pub fn render_search(client: &Client, request: &rouille::Request) -> ApiResult<String> {
+    return Err(crate::api::error::ApiError::Internal("Search is currently disabled due to abuse".to_string()));
     match request.get_param("query") {
         Some(query) => {
             let offset = request

@@ -20,8 +20,10 @@ pub fn render_image(thumbnail: &Image, settings: &Settings) -> maud::Markup {
     };
     let mut srcset = String::new();
     for width in RESIZE_STEPS {
-        if width > thumbnail.width {
-            break;
+        if let Some(w) = thumbnail.width {
+            if width > w {
+                break;
+            }
         }
         srcset.push_str(&format!("{url}&width={width}&quality=80 {width}w,"));
     }
@@ -30,7 +32,7 @@ pub fn render_image(thumbnail: &Image, settings: &Settings) -> maud::Markup {
         figure {
             img src=(url)
                 srcset=(srcset)
-                width=(thumbnail.width) height=(thumbnail.height)
+                width=[thumbnail.width] height=[thumbnail.height]
                 alt="";
             @if let Some(caption) = &thumbnail.caption {
                 figcaption { i { (caption) } }

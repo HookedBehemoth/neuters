@@ -27,8 +27,8 @@ pub struct Article {
 #[derive(Deserialize)]
 pub struct Image {
     pub caption: Option<String>,
-    pub width: u16,
-    pub height: u16,
+    pub width: Option<u16>,
+    pub height: Option<u16>,
     pub resizer_url: String,
 }
 

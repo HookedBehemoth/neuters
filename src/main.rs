@@ -173,7 +173,7 @@ fn main() {
                     .get("/world/")
                     .unwrap_or_else(|| panic!("Section 'world' not found"));
 
-                render_section(&client, section, offset, 8)
+                render_section(&client, section, offset, settings.article_limit)
             }
             "/about" => render_about(),
             "/settings" => return handle_settings(request, &settings),
@@ -195,7 +195,7 @@ fn main() {
                     let offset = request
                         .get_param("offset")
                         .map_or(0, |s| s.parse::<u32>().unwrap_or(0));
-                    render_section(&client, section, offset, 8)
+                    render_section(&client, section, offset, settings.article_limit)
                 } else if path.starts_with("/authors/") {
                     let offset = request
                         .get_param("offset")
